@@ -1,0 +1,5 @@
+{:app-name "automaton-build"
+ :code {:forbidden-words ["TODO" "DONE" "NOTE" "FIXME" "tap>" "automaton-core" "automaton-web"]}
+ :deps {:excluded-libs
+        [{:doc "0.16.3 has deprecated warnings, fix is already in main merged but not released yet"
+          :name "metosin/malli"}]}}
