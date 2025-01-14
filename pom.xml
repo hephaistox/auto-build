@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
-  <artifactId>automaton-build</artifactId>
+  <artifactId>auto-build</artifactId>
   <version>LATEST</version>
   <name>automan-build</name>
   <description>Hephaistox common tasks for project manipulation</description>
-  <url>https://github.com/hephaistox/automaton-build</url>
+  <url>https://github.com/hephaistox/auto-build</url>
 
   <licenses>
     <license>
@@ -23,8 +23,8 @@
   </developers>
 
   <scm>
-    <url>https://github.com/hephaistox/automaton-build</url>
-    <developerConnection>scm:git:ssh://git@github.com:hephaistox/automaton-build.git</developerConnection>
+    <url>https://github.com/hephaistox/auto-build</url>
+    <developerConnection>scm:git:ssh://git@github.com:hephaistox/auto-build.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 

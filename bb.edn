@@ -15,6 +15,10 @@
                :task (-> {:port (port-number)}
                          pr-str
                          println)},
+    lint {:doc "Lint",
+          :requires [[auto-build.tasks.lint :as task-lint]
+                     [auto-build.echo :refer [level1-header]]],
+          :task (task-lint/lint level1-header ["src"] ".")},
     repl {:doc "Clojure repl",
           :override-builtin true,
           :task (-> (shell {:continue true} "clojure" "-M:repl")
