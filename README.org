@@ -1,0 +1,23 @@
+#+title: auto-build
+#+author: Anthony CAUMOND
+# See full fledge org example here https://github.com/fniessen/refcard-org-mode/blob/master/README.org?plain=1
+
+[[https://github.com/hephaistox/auto-build/wiki][ Project wiki ]]|[[https://github.com/hephaistox/hephaistox/wiki][ Hephaistox wiki ]]| [[https://github.com/hephaistox/auto-build/discussions][ Discussions ]]
+
+Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/blob/main/README.md][definitions]]).
+
+[[file:docs/img/automaton_small_duck.png]]
+
+#+BEGIN_QUOTE
+If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b
+#+END_QUOTE
+
+* Main features
+** Premade tasks for our technical stack
+- Build clojure, bb and clojurescript projects
+- Test, lint and format project code
+- For cli user interaction, execute commands with feedbacks on the cli with two modes: `heading` for a sequence of tasks organizeed as a tree, `actions` which suits for long lasting actions which feedbacks may be intertwine
+** Cli options
+
+* LICENCE
+See license information in [LICENSE file](LICENSE.md) Copyright © 2020-2024 Hephaistox

@@ -1,0 +1,27 @@
+{:deps {cheshire/cheshire {:mvn/version "5.13.0"},
+        io.github.clojure/tools.build {:mvn/version "0.10.5"},
+        metosin/malli {:mvn/version "0.16.1"},
+        org.clojure/tools.cli {:mvn/version "1.1.230"}},
+ :paths ["src"],
+ :tasks
+   {-base-deps {:doc "Dependencies for a task using bb"},
+    -wf-2 {:depends []},
+    :requires [;;NOTE Should be empty to ensure `lconnect` can start
+               ;;whatever the state of the code is.
+              ],
+    heph-info {:doc "Returns some formatted informations for Hephaistox",
+               :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
+               :requires [[auto-build.repl.port-number :refer [port-number]]],
+               :task (-> {:port (port-number)}
+                         pr-str
+                         println)},
+    repl {:doc "Clojure repl",
+          :override-builtin true,
+          :task (-> (try (-> (shell "clojure" "-M:repl")
+                             :exit)
+                         (catch Exception e
+                           (println
+                             "Repl failed also - error during repl startup\n  *"
+                             (pr-str e))
+                           -1))
+                    System/exit)}}}
