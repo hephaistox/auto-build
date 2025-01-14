@@ -17,11 +17,6 @@
                          println)},
     repl {:doc "Clojure repl",
           :override-builtin true,
-          :task (-> (try (-> (shell "clojure" "-M:repl")
-                             :exit)
-                         (catch Exception e
-                           (println
-                             "Repl failed also - error during repl startup\n  *"
-                             (pr-str e))
-                           -1))
+          :task (-> (shell {:continue true} "clojure" "-M:repl")
+                    :exit
                     System/exit)}}}
