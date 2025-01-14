@@ -13,8 +13,9 @@ If every tool, when ordered, or even of its own accord, could do the work that b
 #+END_QUOTE
 
 * Main features
-** Premade tasks for our technical stack
-- Build clojure, bb and clojurescript projects
+** Features for our technical stack
+- Build clojure as jar and uberjar
+- Build clojurescript with shadow-cljs
 - Test, lint and format project code
 - For cli user interaction, execute commands with feedbacks on the cli with two modes: `heading` for a sequence of tasks organizeed as a tree, `actions` which suits for long lasting actions which feedbacks may be intertwine
 ** Cli options
