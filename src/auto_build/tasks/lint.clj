@@ -37,9 +37,9 @@
   [{:keys [normalln errorln], :as _printers} subdirs app-dir]
   (let [debug? verbose]
     (normalln "Linting")
-    (if (= :failure
+    (if (= :success
            (-> (lint-cmd debug? subdirs)
                (build-cmd/print-on-error app-dir normalln errorln 10 100 100)
                :status))
-      build-exit-codes/general-errors
-      build-exit-codes/ok)))
+      build-exit-codes/ok
+      build-exit-codes/general-errors)))
