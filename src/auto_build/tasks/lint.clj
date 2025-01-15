@@ -44,7 +44,6 @@
                                                   app-dir
                                                   normalln
                                                   errorln
-                                                  nil
                                                   10)
                               (build-cmd/print-on-error (lint-cmd debug?
                                                                   subdirs)

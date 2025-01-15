@@ -73,7 +73,6 @@
                                                          app-dir
                                                          normalln
                                                          errorln
-                                                         nil
                                                          10)
                                      (build-cmd/print-on-error cmd
                                                                app-dir

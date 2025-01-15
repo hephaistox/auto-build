@@ -47,11 +47,15 @@
     (normalln (pr-str cli-opts))
     nil))
 
+(defn print-help-message
+  [cli-opts current-task-name]
+  (print-usage-msg cli-opts current-task-name)
+  build-exit-codes/ok)
+
 (defn- print-help
   [cli-opts current-task-name]
   (when (get-in cli-opts [:options :help])
-    (print-usage-msg cli-opts current-task-name)
-    build-exit-codes/ok))
+    (print-help-message cli-opts current-task-name)))
 
 (defn- print-help-with-args
   [cli-opts current-task-name argument-name argument-desc]

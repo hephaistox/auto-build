@@ -8,15 +8,11 @@
 
 (defn filename
   "Returns the `project.edn` filename of the project in `app-dir`."
-  [{:keys [errorln], :as printers} app-dir]
-  (let [project-config-filedesc
-          (build-filename/create-file-path app-dir project-cfg-filename)]
-    (when-not (= :success (get project-config-filedesc :status))
-      (errorln printers "project.edn is not found"))))
+  [app-dir]
+  (build-filename/create-file-path app-dir project-cfg-filename))
 
 (defn read
   "Returns the project configuration file descriptor in `app-dir`."
   [printers app-dir]
-  (->> app-dir
-       (filename printers)
+  (->> (filename app-dir)
        (build-edn/read-edn printers)))

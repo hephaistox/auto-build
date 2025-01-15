@@ -1,0 +1,21 @@
+name: Tag - Deployment to clojars
+# See https://github.com/jlesquembre/clojars-publish-action
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  clojars:
+    permissions:
+       contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      # This step checks out a copy of your repository.
+      - uses: actions/checkout@v4
+
+      - uses: jlesquembre/clojars-publish-action@89a4eb7bdbe1270621e6643250afce152701699e # v0.3
+        env:
+          CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+          CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}

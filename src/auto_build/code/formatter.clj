@@ -60,7 +60,7 @@
     (if (= status :ko)
       (errorln message)
       (if verbose
-        (build-cmd/printing format-clj-cmd app-dir normalln errorln nil 10)
+        (build-cmd/printing format-clj-cmd app-dir normalln errorln 10)
         (build-cmd/print-on-error format-clj-cmd
                                   app-dir
                                   normalln
