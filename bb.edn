@@ -18,6 +18,11 @@
                                                       "clj-test-runner"
                                                       (current-task))
                              System/exit)},
+    format {:doc "Format",
+            :requires [[auto-build.tasks.formatting :as task-format]
+                       [auto-build.echo :refer [level1-header]]],
+            :task (some-> (task-format/format level1-header ".")
+                          System/exit)},
     heph-info {:doc "Returns some formatted informations for Hephaistox",
                :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
                :requires [[auto-build.repl.port-number :refer [port-number]]],
