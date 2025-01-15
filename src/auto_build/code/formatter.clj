@@ -34,12 +34,13 @@
 
 (defn format-clj
   [{:keys [normalln errorln], :as _printers} app-dir verbose]
-  (let [{:keys [message status]} (formatter-setup)]
+  (let [{:keys [message status]} (formatter-setup)
+        format-clj-cmd (format-clj-cmd)]
     (if (= status :ko)
       (errorln message)
       (if verbose
-        (build-cmd/printing (format-clj-cmd) app-dir normalln errorln nil 10)
-        (build-cmd/print-on-error (format-clj-cmd)
+        (build-cmd/printing format-clj-cmd app-dir normalln errorln nil 10)
+        (build-cmd/print-on-error format-clj-cmd
                                   app-dir
                                   normalln
                                   errorln

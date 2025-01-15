@@ -31,7 +31,7 @@ jobs:
           clj-kondo: 2024.11.14        # Clj-kondo
           zprint: 1.2.9                # zprint
       - name: Install fdfind
-        run: sudo apt-get install -y fd-find
+        run: sudo apt-get install -y fd-find && mkdir -p ~/.local/bin/ && PATH=$PATH:~/.local/bin/ && ln -s $(which fdfind) ~/.local/bin/fd
       - name: Setup zprint
         run: echo "{:search-config? true}" >> ~/.zprintrc
       - name: Cache clojure dependencies

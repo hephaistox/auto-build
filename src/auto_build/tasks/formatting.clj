@@ -20,13 +20,11 @@
 ;; ********************************************************************************
 
 (defn format
-  "Format project
-
-  if `debug?` is `true`,  linter provides detailed informations"
+  "Format project"
   [{:keys [title], :as printers} app-dir]
   (title "Format")
-  (if (= :failure
+  (if (= :success
          (-> (build-formatter/format-clj printers app-dir verbose)
              :status))
-    build-exit-codes/general-errors
-    build-exit-codes/ok))
+    build-exit-codes/ok
+    build-exit-codes/general-errors))
