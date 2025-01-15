@@ -13,13 +13,6 @@
   [zprint documentation](https://github.com/kkinnear/zprint/blob/main/doc/using/project.md#use-zprint-with-different-formatting-for-different-projects)"
   #":search-config\?\s*true")
 
-
-
-(defn format-clj-cmd
-  "Command formatting all clj files in the directory and subdirectories where it is executed."
-  []
-  ["fdfind" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])
-
 (defn formatter-setup
   "Returns a map describing if zprint. "
   []
@@ -33,6 +26,26 @@
         {:message
            "zprint local configuration is missing. Please add `:search-config? true` in your `~/.zprintc`",
          :status :ko}))))
+
+(defn format-clj-cmd
+  "Command formatting all clj files in the directory and subdirectories where it is executed."
+  []
+  ["fd" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])
+
+(defn format-clj
+  [{:keys [normalln errorln], :as _printers} app-dir verbose]
+  (let [{:keys [message status]} (formatter-setup)]
+    (if (= status :ko)
+      (errorln message)
+      (if verbose
+        (build-cmd/printing (format-clj-cmd) app-dir normalln errorln nil 10)
+        (build-cmd/print-on-error (format-clj-cmd)
+                                  app-dir
+                                  normalln
+                                  errorln
+                                  10
+                                  100
+                                  100)))))
 
 (defn format-file-cmd
   "Command to format the `filename` with zprint."
