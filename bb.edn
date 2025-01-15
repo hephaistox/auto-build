@@ -9,6 +9,15 @@
     :requires [;;NOTE Should be empty to ensure `lconnect` can start
                ;;whatever the state of the code is.
               ],
+    clj-test {:doc "Test with clj",
+              :requires [[auto-build.tasks.clj-test :as build-clj-test]
+                         [auto-build.echo :refer [level1-header]]],
+              :task (some->> ["test-bb" "test-unit"]
+                             (build-clj-test/clj-test level1-header
+                                                      "."
+                                                      "clj-test-runner"
+                                                      (current-task))
+                             System/exit)},
     heph-info {:doc "Returns some formatted informations for Hephaistox",
                :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
                :requires [[auto-build.repl.port-number :refer [port-number]]],
@@ -18,7 +27,8 @@
     lint {:doc "Lint",
           :requires [[auto-build.tasks.lint :as task-lint]
                      [auto-build.echo :refer [level1-header]]],
-          :task (task-lint/lint level1-header ["src"] ".")},
+          :task (some-> (task-lint/lint level1-header ["src"] ".")
+                        System/exit)},
     repl {:doc "Clojure repl",
           :override-builtin true,
           :task (-> (shell {:continue true} "clojure" "-M:repl")

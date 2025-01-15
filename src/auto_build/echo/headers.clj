@@ -22,8 +22,7 @@
 (defn header-printing
   "Print `texts` with the header prefix called `prefix`."
   [prefix texts]
-  (doseq [text texts]
-    (println (str (apply str (butlast (current-left-margin))) prefix text))))
+  (apply println (apply str (butlast (current-left-margin))) prefix texts))
 
 ;; ********************************************************************************
 ;; Overridden echoing functions

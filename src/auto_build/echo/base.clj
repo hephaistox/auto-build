@@ -44,6 +44,20 @@
 
 (defn pprint-str "Pretty print `data`" [data] (with-out-str (pp/pprint data)))
 
+(def normalln println)
+
+(defn errorln
+  [& texts]
+  (print build-text/bg-red)
+  (apply println texts)
+  (print build-text/style-reset-all))
+
+(comment
+  (normalln "argz")
+  (errorln "arg")
+  ;
+)
+
 (def printers
   "Generic printers defined - printing raw text on the terminal"
   {:cmd-str cmd-str,
@@ -54,5 +68,5 @@
    :build-writter build-writter,
    :print-writter print-writter,
    :pprint-str pprint-str,
-   :normalln println,
-   :errorln println})
+   :normalln normalln,
+   :errorln errorln})

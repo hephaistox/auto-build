@@ -1,10 +1,20 @@
 {:aliases
-   {:repl {:extra-deps {cider/cider-nrepl {:mvn/version "0.50.2"},
+   {:clj-test-runner
+      {:exec-fn cognitect.test-runner.api/test,
+       :extra-deps {com.cognitect/test-runner
+                      {:git/url "https://github.com/cognitect-labs/test-runner",
+                       :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}}},
+    :repl {:extra-deps {cider/cider-nrepl {:mvn/version "0.50.2"},
                         refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}},
            :extra-paths ["env/dev/src/clj" "env/dev/src/cljc"
-                         "env/dev/resources" "test"],
-           :jvm-opts ["-Dheph-conf=env/dev/config.edn,env/common_config.edn"],
-           :main-opts ["-m" "auto-build.repl.entry-point"]}},
+                         "env/dev/resources" "test" "env/unit/test"],
+           :main-opts ["-m" "auto-build.repl.entry-point"]},
+    :test-bb {:extra-paths ["test"],
+              :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d"
+                          "test"]},
+    :test-unit {:extra-paths ["env/unit/test/"],
+                :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d"
+                            "env/unit/test/"]}},
  :deps {babashka/fs {:mvn/version "0.5.22"},
         babashka/process {:mvn/version "0.5.22"},
         cheshire/cheshire {:mvn/version "5.13.0"},

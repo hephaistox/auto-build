@@ -1,6 +1,7 @@
 (ns auto-build.tasks.lint
   (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.os.cmd :as build-cmd]))
+            [auto-build.os.cmd :as build-cmd]
+            [auto-build.os.exit-codes :as build-exit-codes]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -21,7 +22,9 @@
   "Lint command in `paths`. If `debug?` is set, that informations are displayed."
   [debug? paths]
   (when-not (empty? paths)
-    (-> (concat ["clj-kondo"] ;; Project still too small : "--parallel"
+    (-> (concat ["clj-kondo"]
+                ;; Project still too small and parallel is not useful:
+                ;; "--parallel"
                 (when debug? ["--debug"])
                 ["--lint"]
                 paths)
@@ -34,5 +37,9 @@
   [{:keys [normalln errorln], :as _printers} subdirs app-dir]
   (let [debug? verbose]
     (normalln "Linting")
-    (-> (lint-cmd debug? subdirs)
-        (build-cmd/print-on-error app-dir normalln errorln 10 100 100))))
+    (if (= :failure
+           (-> (lint-cmd debug? subdirs)
+               (build-cmd/print-on-error app-dir normalln errorln 10 100 100)
+               :status))
+      build-exit-codes/general-errors
+      build-exit-codes/ok)))
