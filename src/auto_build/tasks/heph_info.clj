@@ -1,7 +1,6 @@
-(ns auto-build.tasks.formatting
-  (:refer-clojure :exclude [format])
+(ns auto-build.tasks.heph-info
   (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.code.formatter :as build-formatter]
+            [auto-build.repl.port-number :refer [port-number]]
             [auto-build.os.exit-codes :as build-exit-codes]))
 
 ;; ********************************************************************************
@@ -10,23 +9,21 @@
 
 (def cli-opts
   (-> []
-      (concat build-cli-opts/help-options build-cli-opts/verbose-options)
+      (concat build-cli-opts/help-options)
       build-cli-opts/parse-cli-args))
-
-(def verbose (get-in cli-opts [:options :verbose]))
 
 ;; ********************************************************************************
 ;; *** Task code
 ;; ********************************************************************************
 
-(defn format
-  "Format project"
-  [{:keys [title], :as printers} app-dir current-task]
-  (title "Format")
+(defn heph-info
+  "Print project infos"
+  [{:keys [title], :as _printers} current-task]
+  (title "Heph info")
   (let [exit-code (build-cli-opts/enter cli-opts current-task)]
-    (cond exit-code exit-code
-          (= :success
-             (-> (build-formatter/format-clj printers app-dir verbose)
-                 :status))
-            build-exit-codes/ok
-          :else build-exit-codes/general-errors)))
+    (if exit-code
+      exit-code
+      (do (-> {:port (port-number)}
+              pr-str
+              println)
+          build-exit-codes/general-errors))))

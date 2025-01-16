@@ -22,11 +22,10 @@
   "Lint command in `paths`. If `debug?` is set, that informations are displayed."
   [debug? paths]
   (when-not (empty? paths)
-    (-> (concat ["clj-kondo"]
-                ;; Project still too small and parallel is not useful:
-                ;; "--parallel"
+    (-> (concat ["clj-kondo" "--parallel"]
                 (when debug? ["--debug"])
                 ["--lint"]
+                (mapv #(if (string? %) % (.getFile %)) paths)
                 paths)
         vec)))
 
@@ -34,12 +33,27 @@
   "Lint `paths`
 
   if `debug?` is `true`,  linter provides detailed informations"
-  [{:keys [normalln errorln], :as _printers} subdirs app-dir]
-  (let [debug? verbose]
+  [{:keys [normalln errorln], :as _printers} subdirs app-dir current-task]
+  (let [debug? verbose
+        exit-code (build-cli-opts/enter cli-opts current-task)]
     (normalln "Linting")
-    (if (= :success
-           (-> (lint-cmd debug? subdirs)
-               (build-cmd/print-on-error app-dir normalln errorln 10 100 100)
-               :status))
-      build-exit-codes/ok
-      build-exit-codes/general-errors)))
+    (if exit-code
+      exit-code
+      (let [linting-cmd-res (if verbose
+                              (build-cmd/printing (lint-cmd debug? subdirs)
+                                                  app-dir
+                                                  normalln
+                                                  errorln
+                                                  nil
+                                                  10)
+                              (build-cmd/print-on-error (lint-cmd debug?
+                                                                  subdirs)
+                                                        app-dir
+                                                        normalln
+                                                        errorln
+                                                        10
+                                                        100
+                                                        100))]
+        (if (= :success (:status linting-cmd-res))
+          build-exit-codes/ok
+          build-exit-codes/general-errors)))))

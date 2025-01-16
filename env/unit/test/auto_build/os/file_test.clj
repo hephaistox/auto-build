@@ -2,7 +2,8 @@
   (:require [auto-build.os.file :as sut]
             [auto-build.os.filename :as build-filename]
             [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]))
+            [clojure.test :refer [deftest is testing]]
+            [clojure.java.io :as io]))
 
 ;; ********************************************************************************
 ;; Directory manipulation
@@ -20,13 +21,16 @@
         "Not existing file")))
 
 (deftest ensure-dir-exists-test
-  (is (= "tmp/build-file-test" (sut/ensure-dir-exists "tmp/build-file-test"))
+  (is (-> (sut/ensure-dir-exists (sut/create-temp-dir))
+          sut/is-existing-dir?)
       "A created directory"))
 
 (deftest delete-dir-test
-  (sut/ensure-empty-dir "tmp/build-file-test")
-  (is (= "tmp/build-file-test" (sut/delete-dir "tmp/build-file-test")))
-  (is (nil? (sut/delete-dir "tmp/build-file-test"))))
+  (let [tmp-dir (sut/create-temp-dir)]
+    (sut/ensure-empty-dir tmp-dir)
+    (is (= tmp-dir (sut/delete-dir tmp-dir)))
+    (is (nil? (sut/delete-dir tmp-dir))
+        "Second deletion returns `nil`, as all non existing dir")))
 
 (deftest ensure-empty-dir-test
   (is (= "tmp/build-file-test" (sut/ensure-empty-dir "tmp/build-file-test"))))
@@ -77,7 +81,7 @@
 (defn create-test-file
   [dir filename]
   (-> (build-filename/create-file-path dir filename)
-      (sut/write-file filename)))
+      (sut/write-file nil filename)))
 
 (deftest path-on-disk?-test
   (let [dir (->> "test"
@@ -123,40 +127,83 @@
 ;; ********************************************************************************
 ;; Modify file content
 
-(deftest write-file-test
-  (is (= {:filepath true, :afilepath true, :raw-content "foo", :status :success}
-         (-> (sut/create-temp-file)
-             (sut/write-file "foo")
-             (update :filepath string?)
-             (update :afilepath string?)))
-      "File properly written")
-  (is (= {:filepath nil, :afilepath true, :raw-content "foo", :status :fail}
-         (-> nil
-             (sut/write-file "foo")
-             (update :afilepath string?)
-             (dissoc :exception)))
-      "File properly written")
-  (is (= #{:filepath :afilepath :raw-content :status}
-         (-> (sut/create-temp-file)
-             (sut/write-file "foo")
-             keys
-             set))
-      "Expected keys on error")
-  (is (= #{:filepath :afilepath :exception :raw-content :status}
-         (-> nil
-             (sut/write-file "foo")
-             keys
-             set))
-      "Expected keys on success"))
-
 (deftest read-file-test
-  (let [f (sut/read-file "non-existing-file")]
-    (is (= {:filepath "non-existing-file", :afilepath true, :status :fail}
-           (-> f
+  (testing "Returned data"
+    (is (= {:filepath "non-existing-file",
+            :afilepath true,
+            :status :file-loading-fail}
+           (-> (sut/read-file nil "non-existing-file")
                (dissoc :exception)
                (update :afilepath string?)))
         "Non existing file returns invalid?")
-    (is (:exception f) "Non existing files contains errors")))
+    (is (:exception (sut/read-file nil "non-existing-file"))
+        "Non existing files contains errors"))
+  (testing "Printing"
+    (is (= ""
+           (-> (sut/read-file {:errorln println,
+                               :exception-msg (comp println ex-message)}
+                              (io/resource "valid_content.edn"))
+               with-out-str))
+        "What a valid file is printing")
+    (is
+      (=
+        "Impossible to load file non-existing-file.edn\nnon-existing-file.edn (No such file or directory)\n"
+        (-> (sut/read-file {:errorln println,
+                            :exception-msg (comp println ex-message)}
+                           "non-existing-file.edn")
+            with-out-str))
+      "What an invalid file is printing")))
+
+(deftest write-file-test
+  (testing "Returned data"
+    (is
+      (= {:filepath true, :afilepath true, :raw-content "foo", :status :success}
+         (-> (sut/create-temp-file)
+             (sut/write-file nil "foo")
+             (update :filepath string?)
+             (update :afilepath string?)))
+      "File properly written")
+    (is (= #{:filepath :afilepath :raw-content :status}
+           (-> (sut/create-temp-file)
+               (sut/write-file nil "foo")
+               keys
+               set))
+        "File properly written - Expected keys")
+    (is (= {:filepath nil,
+            :afilepath true,
+            :raw-content "foo",
+            :status :file-writing-fail}
+           (-> nil
+               (sut/write-file nil "foo")
+               (update :afilepath string?)
+               (dissoc :exception)))
+        "An invalid filepath")
+    (is (= #{:filepath :afilepath :exception :raw-content :status}
+           (-> nil
+               (sut/write-file nil "foo")
+               keys
+               set))
+        "An invalid filepath - Expected keys"))
+  (testing "What is printed"
+    (is (= "tmp is updated\n"
+           (->> (-> (sut/create-temp-file)
+                    (sut/write-file {:normalln println} "foo")
+                    with-out-str)
+                (take-last 15)
+                (apply str)))
+        "What a successful file writing is printing")
+    (is (= ""
+           (-> (sut/create-temp-file)
+               (sut/write-file {} "foo")
+               with-out-str))
+        "What a successful file writing is printing if no printer is provided")
+    (is (= "File nil could not be written\nCannot open <nil> as a Writer.\n"
+           (-> nil
+               (sut/write-file {:errorln println,
+                                :exception-msg (comp println ex-message)}
+                               "foo")
+               with-out-str))
+        "What a failing file writing is printing")))
 
 ;; ********************************************************************************
 ;; Search
