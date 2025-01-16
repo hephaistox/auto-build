@@ -33,10 +33,10 @@
   "Lint `paths`
 
   if `debug?` is `true`,  linter provides detailed informations"
-  [{:keys [normalln errorln], :as _printers} subdirs app-dir current-task]
+  [{:keys [normalln errorln title], :as _printers} subdirs app-dir current-task]
   (let [debug? verbose
         exit-code (build-cli-opts/enter cli-opts current-task)]
-    (normalln "Linting")
+    (title "Linting")
     (if exit-code
       exit-code
       (let [linting-cmd-res (if verbose

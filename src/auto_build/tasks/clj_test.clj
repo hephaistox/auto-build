@@ -50,6 +50,7 @@
   [{:keys [title title-valid title-error subtitle subtitle-error normalln
            errorln],
     :as printers} app-dir test-runner-alias current-task test-definitions]
+  (title "clj-test")
   (try
     (if-let [aliases-in-deps-edn (aliases-in-deps-edn printers app-dir)]
       (let [cli-opts (cli-opts test-definitions aliases-in-deps-edn)
