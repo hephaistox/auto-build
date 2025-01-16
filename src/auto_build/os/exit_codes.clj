@@ -29,3 +29,4 @@
 (def intentional "131 - Intentional error" 131)
 
 (def rules-broken "132 - A rules is broken, execution is stopped" 132)
+

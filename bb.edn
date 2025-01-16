@@ -5,10 +5,20 @@
  :paths ["src"],
  :tasks
    {-base-deps {:doc "Dependencies for a task using bb"},
-    -wf-2 {:depends []},
+    :init (do (def ^:dynamic exit System/exit)),
     :requires [;;NOTE Should be empty to ensure `lconnect` can start
                ;;whatever the state of the code is.
-              ],
+               [auto-build.os.exit-codes]],
+    bp {:doc "Before push",
+        :task (binding [exit (fn [exit-code & _]
+                               (when-not (zero? exit-code) exit-code))]
+                (-> (or (run 'format)
+                        (run 'lint)
+                        (binding [*command-line-args* (conj *command-line-args*
+                                                            "all")]
+                          (run 'clj-test))
+                        auto-build.os.exit-codes/ok)
+                    System/exit))},
     clj-test {:doc "Test with clj",
               :requires [[auto-build.tasks.clj-test :as build-clj-test]
                          [auto-build.echo :refer [level1-header]]],
@@ -17,23 +27,23 @@
                                                       "."
                                                       "clj-test-runner"
                                                       (current-task))
-                             System/exit)},
+                             exit)},
     deploy {:doc "Deploy",
             :requires [[auto-build.tasks.deploy :as task-deploy]
                        [auto-build.echo :refer [level1-header]]],
             :task (some-> (task-deploy/deploy level1-header "." (current-task))
-                          System/exit)},
+                          exit)},
     format {:doc "Format",
             :requires [[auto-build.tasks.formatting :as task-format]
                        [auto-build.echo :refer [level1-header]]],
             :task (some-> (task-format/format level1-header "." (current-task))
-                          System/exit)},
+                          exit)},
     heph-info {:doc "Hephaistox project info",
                :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
                :requires [[auto-build.tasks.heph-info :as heph-info]
                           [auto-build.echo :refer [level1-header]]],
                :task (some-> (heph-info/heph-info level1-header (current-task))
-                             System/exit)},
+                             exit)},
     lint {:doc "Lint",
           :requires [[auto-build.tasks.lint :as task-lint]
                      [auto-build.echo :refer [level1-header]]],
@@ -43,10 +53,10 @@
                                          "env/dev/test" "env/unit/test"]
                                         "."
                                         (current-task))
-                        System/exit)},
+                        exit)},
     repl {:doc "Clojure repl",
           :override-builtin true,
           :requires [[auto-build.tasks.repl :as build-repl]
                      [auto-build.echo :refer [level1-header]]],
           :task (some-> (build-repl/repl level1-header "." (current-task))
-                        System/exit)}}}
+                        exit)}}}
