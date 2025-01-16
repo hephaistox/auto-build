@@ -1,8 +1,6 @@
-(ns auto-build.tasks.formatting
-  (:refer-clojure :exclude [format])
+(ns auto-build.tasks.repl
   (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.code.formatter :as build-formatter]
-            [auto-build.os.exit-codes :as build-exit-codes]))
+            [babashka.process :as p]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -19,14 +17,12 @@
 ;; *** Task code
 ;; ********************************************************************************
 
-(defn format
-  "Format project"
-  [{:keys [title], :as printers} app-dir current-task]
-  (title "Format")
+(defn repl
+  [{:keys [title], :as _printers} app-dir current-task]
+  (title "Start clj repl")
+  (when verbose (println "Execute [clojure -M:repl]"))
   (let [exit-code (build-cli-opts/enter cli-opts current-task)]
-    (cond exit-code exit-code
-          (= :success
-             (-> (build-formatter/format-clj printers app-dir verbose)
-                 :status))
-            build-exit-codes/ok
-          :else build-exit-codes/general-errors)))
+    (if exit-code
+      exit-code
+      (-> (p/shell {:continue true, :dir app-dir} "clojure" "-M:repl")
+          :exit))))

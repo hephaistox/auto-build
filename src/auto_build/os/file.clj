@@ -19,7 +19,7 @@
 
 (defn ensure-dir-exists
   "Creates directory `dirpath` if not already existing.
-  Return `dirpath` if successfull, `nil` if creation has failed "
+  Return `dirpath` if succesful, `nil` if creation has failed "
   [dirpath]
   (when (string? dirpath)
     (when-not (is-existing-dir? dirpath) (fs/create-dirs dirpath))
@@ -54,7 +54,7 @@
 (defn is-existing-file?
   "Returns the `filepath` if it already exists and is a regular file. Returns `nil` otherwise."
   [filepath]
-  (if (str/blank? filepath)
+  (if (or (nil? filepath) (and (string? filepath) (str/blank? filepath)))
     "."
     (when (and (fs/exists? filepath) (fs/regular-file? filepath)) filepath)))
 
@@ -150,44 +150,64 @@
 ;; ********************************************************************************
 ;; Modify file content
 
-(defn write-file
-  "Write the `content` in the file at `filepath` .
-
-  Returns
-  * `:filepath` as given as a parameter
-  * `:afilepath` file with absolute path
-  * `:status` is `:success` or `:fail`
-  * `:raw-content`
-  * `:exception` (only if `:status` is `:fail`)"
-  [filepath content]
-  (merge {:filepath filepath,
-          :afilepath (build-filename/absolutize filepath),
-          :raw-content content}
-         (try (spit filepath content)
-              {:status :success}
-              (catch Exception e {:exception e, :status :fail}))))
-
 (defn read-file
   "Read the file named `filepath`.
 
 Returns:
   * `:filepath` as given as a parameter
   * `:afilepath` file with absolute path
-  * `:status` is `:success` or `:fail`
+  * `:status` is `:success` or `:file-loading-fail`
   * `:raw-content` (only if `:status` is `:success`)
-  * `:exception` (only if `:status` is `:fail`)"
-  [filepath]
+  * `:exception` (only if `:status` is `:file-loading-fail`)
+
+  That functions print on the cli:
+  * nothing if successful or if printers are nil
+  * an error message and the message of the exception if the file can't be read."
+  [{:keys [errorln uri-str exception-msg], :as _printers} filepath]
   (let [filepath (str filepath)]
     (merge {:filepath filepath, :afilepath (build-filename/absolutize filepath)}
            (try {:raw-content (slurp filepath), :status :success}
-                (catch Exception e {:exception e, :status :fail})))))
+                (catch Exception e
+                  (when (fn? errorln)
+                    (errorln "Impossible to load file"
+                             ((if (fn? uri-str) uri-str identity) filepath)))
+                  (when exception-msg (exception-msg e))
+                  {:exception e, :status :file-loading-fail})))))
+
+(defn write-file
+  "Write the `content` in the file at `filepath` .
+
+  Returns
+  * `:filepath` as given as a parameter
+  * `:afilepath` file with absolute path
+  * `:status` is `:success` or `:file-writing-fail`
+  * `:raw-content` if file can be read.
+  * `:exception` (only if `:status` is `:file-writing-fail`)"
+  [filepath {:keys [errorln exception-msg normalln uri-str], :as _printers}
+   content]
+  (merge {:filepath filepath,
+          :afilepath (build-filename/absolutize filepath),
+          :raw-content content}
+         (try (spit filepath content)
+              (when (fn? normalln)
+                (normalln "File"
+                          ((if (fn? uri-str) uri-str identity) filepath)
+                          "is updated"))
+              {:status :success}
+              (catch Exception e
+                (when (fn? errorln)
+                  (errorln "File"
+                           ((if (fn? uri-str) uri-str identity) filepath)
+                           "could not be written"))
+                (when (fn? exception-msg) (exception-msg e))
+                {:exception e, :status :file-writing-fail}))))
 
 (defn combine-files
   "Read text content of files `src-filepathes` - in the order of the sequence - and combine them into `target-filepath`."
-  [target-filepath & src-filepathes]
+  [printers target-filepath & src-filepathes]
   (->> (map (comp :raw-content read-file) src-filepathes)
        (apply str)
-       (write-file target-filepath)))
+       (write-file printers target-filepath)))
 
 (defn pp-file
   "Pretty print content `file-content` into file `filepath`."
@@ -261,19 +281,21 @@ The `options` could be `:replace-existing` `:copy-attributes`. Returns:
    (copy-action path src-dirpath dst-dirpath {})))
 
 (defn do-copy-action
-  "Do the actual copy of `copy-action`, enrich it with `:status` (`:failed` or `:success`)"
+  "Do the actual copy of `copy-action`, enrich it with `:status` (`:copy-fail` or `:success`)"
   [{:keys [type path dst-dirpath target-path options exist?], :as copy-action}]
   (ensure-dir-exists dst-dirpath)
   (cond (and exist? (= type :file))
           (merge copy-action
-                 (try (copy-file path dst-dirpath options)
-                      {:status :success, :method :file}
-                      (catch Exception e
-                        {:status :failed, :method :file, :exception e})))
+                 (try
+                   (copy-file path dst-dirpath options)
+                   {:status :success, :method :file}
+                   (catch Exception e
+                     {:status :file-copy-fail, :method :file, :exception e})))
         (and exist? (= type :directory))
-          (merge copy-action
-                 (try (copy-dir path target-path options)
-                      {:status :success, :method :directory}
-                      (catch Exception e
-                        {:status :failed, :method :directory, :exception e})))
+          (merge
+            copy-action
+            (try (copy-dir path target-path options)
+                 {:status :success, :method :directory}
+                 (catch Exception e
+                   {:status :dir-copy-fail, :method :directory, :exception e})))
         :else (assoc copy-action :status :skipped)))

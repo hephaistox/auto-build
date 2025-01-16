@@ -1,7 +1,7 @@
 (ns auto-build.tasks.clj-test
   (:require [auto-build.os.cli-opts :as build-cli-opts]
             [auto-build.os.cmd :as build-cmd]
-            [auto-build.code.deps :as build-deps]
+            [auto-build.project.deps :as build-deps]
             [auto-build.os.exit-codes :as build-exit-codes]
             [auto-build.os.filename :refer [absolutize]]))
 
@@ -28,9 +28,9 @@
                 :alias alias}))))
 
 (defn- aliases-in-deps-edn
-  [{:keys [errorln uri-str], :as _printers} app-dir]
-  (let [{:keys [invalid? edn dir]} (build-deps/read app-dir)]
-    (if invalid?
+  [{:keys [errorln uri-str], :as printers} app-dir]
+  (let [{:keys [status edn dir]} (build-deps/read printers app-dir)]
+    (if-not (= :success status)
       (do (errorln "`deps.edn` file is invalid in dir "
                    (-> dir
                        absolutize
@@ -62,39 +62,34 @@
           exit-code
           (let [{:keys [valid-args]} cli-opts
                 exit-codes
-                  (->>
-                    valid-args
-                    (test-cmd test-runner-alias)
-                    (keep
-                      (fn [{:keys [cmd alias]}]
-                        (subtitle "Tests" alias)
-                        (let [{:keys [status]}
-                                (if verbose
-                                  (build-cmd/printing cmd
-                                                      app-dir
-                                                      normalln
-                                                      errorln
-                                                      nil
-                                                      10)
-                                  (build-cmd/print-on-error cmd
-                                                            app-dir
-                                                            normalln
-                                                            errorln
-                                                            10
-                                                            100
-                                                            100))]
-                          (when-not (= :success status)
-                            (subtitle-error
-                              "Tests"
-                              alias
-                              "have
-                                   failed"))
-                          status))))]
+                  (->> valid-args
+                       (test-cmd test-runner-alias)
+                       (keep
+                         (fn [{:keys [cmd alias]}]
+                           (subtitle "Tests" alias)
+                           (let [{:keys [status]}
+                                   (if verbose
+                                     (build-cmd/printing cmd
+                                                         app-dir
+                                                         normalln
+                                                         errorln
+                                                         nil
+                                                         10)
+                                     (build-cmd/print-on-error cmd
+                                                               app-dir
+                                                               normalln
+                                                               errorln
+                                                               10
+                                                               100
+                                                               100))]
+                             (when-not (= :success status)
+                               (subtitle-error "Tests" alias "have failed"))
+                             status))))]
             (title "Tested environments:" valid-args)
             (if (every? #(= :success %) exit-codes)
               (do (title-valid "Tests passed") build-exit-codes/ok)
               (do (title-error "Tests have failed")
                   build-exit-codes/invalid-state))
             build-exit-codes/ok)))
-      (do (errorln "deps.edn file is missing") build-exit-codes/invalid-state))
+      build-exit-codes/invalid-state)
     (catch Exception e (println "Unexpected error:") (println (pr-str e)))))

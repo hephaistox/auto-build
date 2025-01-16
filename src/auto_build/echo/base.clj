@@ -17,7 +17,10 @@
 ; Public API
 ; ********************************************************************************
 (defn uri-str "Returns the string of the `uri`." [uri] (str "`" uri "`"))
-(defn cmd-str "Returns the string of the `cmd`." [cmd] (str "`" cmd "`"))
+(defn cmd-str
+  "Returns the string of the `cmd`."
+  [cmd]
+  (let [cmd (if (string? cmd) cmd (.getFile cmd))] (str "`" cmd "`")))
 
 (defn exception-str [e] (pr-str e))
 (defn exceptionln

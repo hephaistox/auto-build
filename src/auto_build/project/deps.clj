@@ -1,4 +1,4 @@
-(ns auto-build.code.deps
+(ns auto-build.project.deps
   (:refer-clojure :exclude [read])
   (:require [auto-build.os.edn-utils :as build-edn-utils]
             [auto-build.os.filename :as build-filename]))
@@ -14,11 +14,11 @@
   * `:raw-content` if file can be read.
   * `:invalid?` is boolean
   * `:exception` if something wrong happened.
-  * `:edn` if the translation is succesfull."
-  [app-dir]
-  (-> app-dir
-      deps-edn-filename
-      build-edn-utils/read-edn))
+  * `:edn` if the translation is succesful."
+  [printers app-dir]
+  (->> app-dir
+       deps-edn-filename
+       (build-edn-utils/read-edn printers)))
 
 (defn write-edn
   "Returns
@@ -27,7 +27,5 @@
   * `:status` is `:success` or `:fail`
   * `:raw-content`
   * `:exception` (only if `:status` is `:fail`)"
-  [printer app-dir content]
-  (-> app-dir
-      deps-edn-filename
-      (build-edn-utils/write-edn printer content)))
+  [printers app-dir content]
+  (build-edn-utils/write-edn printers (deps-edn-filename app-dir) content))

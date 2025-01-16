@@ -12,7 +12,7 @@
     clj-test {:doc "Test with clj",
               :requires [[auto-build.tasks.clj-test :as build-clj-test]
                          [auto-build.echo :refer [level1-header]]],
-              :task (some->> ["test-bb" "test-unit"]
+              :task (some->> ["test-bb" "test-unit" "test-dev"]
                              (build-clj-test/clj-test level1-header
                                                       "."
                                                       "clj-test-runner"
@@ -21,21 +21,27 @@
     format {:doc "Format",
             :requires [[auto-build.tasks.formatting :as task-format]
                        [auto-build.echo :refer [level1-header]]],
-            :task (some-> (task-format/format level1-header ".")
+            :task (some-> (task-format/format level1-header "." (current-task))
                           System/exit)},
-    heph-info {:doc "Returns some formatted informations for Hephaistox",
+    heph-info {:doc "Hephaistox project info",
                :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
-               :requires [[auto-build.repl.port-number :refer [port-number]]],
-               :task (-> {:port (port-number)}
-                         pr-str
-                         println)},
+               :requires [[auto-build.tasks.heph-info :as heph-info]
+                          [auto-build.echo :refer [level1-header]]],
+               :task (some-> (heph-info/heph-info level1-header (current-task))
+                             System/exit)},
     lint {:doc "Lint",
           :requires [[auto-build.tasks.lint :as task-lint]
                      [auto-build.echo :refer [level1-header]]],
-          :task (some-> (task-lint/lint level1-header ["src"] ".")
+          :task (some-> (task-lint/lint level1-header
+                                        ["src" "test" "env/dev/test"
+                                         "env/dev/src/clj" "env/dev/src/cljc"
+                                         "env/dev/test" "env/unit/test"]
+                                        "."
+                                        (current-task))
                         System/exit)},
     repl {:doc "Clojure repl",
           :override-builtin true,
-          :task (-> (shell {:continue true} "clojure" "-M:repl")
-                    :exit
+          :requires [[auto-build.tasks.repl :as build-repl]
+                     [auto-build.echo :refer [level1-header]]],
+          :task (-> (build-repl/repl level1-header "." (current-task))
                     System/exit)}}}

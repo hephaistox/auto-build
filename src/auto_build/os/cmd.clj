@@ -59,7 +59,7 @@
    * `:cmd` the command, e.g. [\"ls\" \"-la\"]
    * `:cmd-str` the command as a string e.g. `ls -la`
    * `:dir` the directory as provided by the user, e.g. \"\"
-   * `:status` is a value among `:wip`, `:didnt-start`, `:success`, `:failure`
+   * `:status` is a value among `:wip`, `:didnt-start`, `:success`, `:fail`
    * `:adir` the expanded directory (useful for debug), e.g. \"/User/johndoe/hephaistox\"
 
    * If the command starts successfully, it returns also
@@ -74,18 +74,20 @@
   `cant-start` is executed if the command execution can't start.
   `on-end` will be executed once, at the end of an execution"
   [cmd dir on-out on-err on-end delay cant-start max-out-lines max-err-lines]
-  (let [adir (-> (if (str/blank? dir) "." dir)
-                 build-filename/absolutize)
-        out-lines (when (number? max-out-lines)
-                    (atom (build-fix-size-queue/init max-out-lines)))
-        err-lines (when (number? max-err-lines)
-                    (atom (build-fix-size-queue/init max-err-lines)))
-        cmd-str (str/join " " cmd)]
-    (merge {:cmd cmd, :cmd-str cmd-str, :dir dir, :status :wip, :adir adir}
-           ;; Create a process that will destroy itself, will not create
-           ;; any exception, and not print anything
-           (try
-             (let [bb-proc (p/process {:shutdown p/destroy-tree,
+  (if (empty? cmd)
+    {:status :empty-cmd}
+    (let [adir (-> (if (str/blank? dir) "." dir)
+                   build-filename/absolutize)
+          out-lines (when (number? max-out-lines)
+                      (atom (build-fix-size-queue/init max-out-lines)))
+          err-lines (when (number? max-err-lines)
+                      (atom (build-fix-size-queue/init max-err-lines)))
+          cmd-str (str/join " " cmd)]
+      (merge
+        {:cmd cmd, :cmd-str cmd-str, :dir dir, :status :wip, :adir adir}
+        ;; Create a process that will destroy itself, will not create
+        ;; any exception, and not print anything
+        (try (let [bb-proc (p/process {:shutdown p/destroy-tree,
                                        :continue true,
                                        :out nil,
                                        :err nil,
@@ -97,7 +99,7 @@
                {:bb-proc bb-proc, :out-stream out-lines, :err-stream err-lines})
              (catch Exception exception
                (when cant-start (cant-start cmd))
-               {:exception exception, :status :didnt-start})))))
+               {:exception exception, :status :didnt-start}))))))
 
 (defn still-running?
   "Returns true if the `process` is still living?"
@@ -118,7 +120,7 @@
   (if (and (= :wip status) bb-proc)
     (let [process (update process :bb-proc deref)
           exit (get-in process [:bb-proc :exit])
-          status (if (= 0 exit) :success :failure)]
+          status (if (= 0 exit) :success :fail)]
       (when (and on-err (not= :success status))
         (on-err (str "Error during execution of " (to-str cmd))))
       ;; It's important to print message first, as stream manipulation

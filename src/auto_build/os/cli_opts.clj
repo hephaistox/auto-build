@@ -44,7 +44,8 @@
   [cli-opts]
   (when (get-in cli-opts [:options :verbose])
     (normalln "Options are:")
-    (normalln (pr-str cli-opts))))
+    (normalln (pr-str cli-opts))
+    nil))
 
 (defn- print-help
   [cli-opts current-task-name]
@@ -63,7 +64,7 @@
 
 (defn- print-no-args-required
   [cli-opts]
-  (when (:arguments cli-opts)
+  (when-not (empty? (:arguments cli-opts))
     (errorln "No arguments are required: " (:arguments cli-opts))
     build-exit-codes/misuse))
 
@@ -123,9 +124,9 @@
   [cli-opts current-task]
   (let [current-task-name (:name current-task)]
     (or (print-verbose cli-opts)
+        (print-help cli-opts current-task-name)
         (print-error-message cli-opts current-task-name)
-        (print-no-args-required cli-opts)
-        (print-help cli-opts current-task-name))))
+        (print-no-args-required cli-opts))))
 
 (defn- print-arg-in-list
   [cli-opts current-task-name argument-name argument-desc]
@@ -154,11 +155,12 @@
   [cli-opts current-task argument-name arg-list]
   (let [argument-desc (apply str (concat ["["] (str/join "|" arg-list) ["]"]))
         current-task-name (:name current-task)]
-    (or (print-error-message cli-opts current-task-name)
+    (or (print-verbose cli-opts)
         (print-help-with-args cli-opts
                               current-task-name
                               argument-name
                               argument-desc)
+        (print-error-message cli-opts current-task-name)
         (print-arg-in-list cli-opts
                            current-task-name
                            argument-name

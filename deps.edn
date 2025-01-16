@@ -7,12 +7,17 @@
     :repl {:extra-deps {cider/cider-nrepl {:mvn/version "0.50.2"},
                         refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}},
            :extra-paths ["env/dev/src/clj" "env/dev/src/cljc"
-                         "env/dev/resources" "test" "env/unit/test"],
+                         "env/dev/resources" "test/src" "test/resources"
+                         "env/unit/test" "env/unit/resources"],
            :main-opts ["-m" "auto-build.repl.entry-point"]},
-    :test-bb {:extra-paths ["test"],
+    :test-bb {:extra-paths ["test/src" "test/resources"],
               :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d"
-                          "test"]},
-    :test-unit {:extra-paths ["env/unit/test/"],
+                          "test/src"]},
+    :test-dev {:extra-paths ["env/dev/test/" "env/dev/resources"
+                             "test/resources"],
+               :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d"
+                           "env/dev/test/" "env/src/clj" "env/src/cljc"]},
+    :test-unit {:extra-paths ["env/unit/test/" "env/unit/resources"],
                 :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d"
                             "env/unit/test/"]}},
  :deps {babashka/fs {:mvn/version "0.5.22"},
