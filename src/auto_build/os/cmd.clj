@@ -198,13 +198,13 @@
 
 (defn printing
   "Print the whole command execution on the terminal. Is blocking until the end."
-  [cmd dir on-out on-err on-end delay]
+  [cmd dir on-out on-err delay]
   (when on-out (on-out "Execute" cmd))
   (-> (create-process cmd
                       dir
                       on-out
                       on-err
-                      on-end
+                      nil
                       delay
                       #(on-err "Cant' start" %)
                       0
@@ -224,3 +224,9 @@
                       max-out-lines
                       max-err-lines)
       (wait-for on-out on-err)))
+
+(defn print-verbosely
+  [verbose cmd dir on-out on-err delay max-out-lines max-err-lines]
+  (if verbose
+    (printing cmd dir on-out on-err delay)
+    (print-on-error cmd dir on-out on-err delay max-out-lines max-err-lines)))

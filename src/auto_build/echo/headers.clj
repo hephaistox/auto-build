@@ -125,20 +125,17 @@
   (h1-error " failed testt")
   (h1-valid " valid test"))
 
-(def overriden-printers
-  "Generic printers overriden for headers"
-  {:normalln normalln,
-   :errorln errorln,
-   :exceptionln exceptionln,
-   :print-cmd print-cmd,
-   :h1 h1,
-   :h2 h2,
-   :h3 h3})
-
 (def printers
   "Printers for headers"
-  (merge overriden-printers
-         {:h1-valid h1-valid,
+  (merge build-echo-base/printers
+         {:normalln normalln,
+          :errorln errorln,
+          :exceptionln exceptionln,
+          :print-cmd print-cmd,
+          :h1 h1,
+          :h2 h2,
+          :h3 h3,
+          :h1-valid h1-valid,
           :h2-valid h2-valid,
           :h3-valid h3-valid,
           :h1-error h1-error,
