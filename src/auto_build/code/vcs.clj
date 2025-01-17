@@ -62,6 +62,28 @@
                    "Error when getting branch"
                    (fn [_status out-stream] {:branch-name (first out-stream)})))
 
+(defn switch-branch
+  "Switch to branch `branch-name`"
+  [printers app-dir verbose branch-name]
+  (execute-vcs-cmd printers
+                   app-dir
+                   verbose
+                   ["git" "switch" branch-name]
+                   :git-branch-switch
+                   "Error when switching branch"
+                   (fn [_status _out-stream] {})))
+
+(defn switch-branch-back
+  "Returns to previous branch"
+  [printers app-dir verbose]
+  (execute-vcs-cmd printers
+                   app-dir
+                   verbose
+                   ["git" "switch" "-"]
+                   :git-branch-switch
+                   "Error when switching branch"
+                   (fn [_status _out-stream] {})))
+
 (defn clean-hard
   "Returns a command to get the name of the current branch."
   [printers app-dir verbose]
@@ -75,11 +97,13 @@
 
 (defn tag
   "Creates a tag under name `version` and message `tag-msg`."
-  [printers app-dir verbose version tag-msg]
+  [printers app-dir verbose version tag-msg force?]
   (execute-vcs-cmd printers
                    app-dir
                    verbose
-                   ["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)]
+                   (if force?
+                     ["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)]
+                     ["git" "tag" "-a" version "-m" (msg-tokenize tag-msg)])
                    :git-tag-create
                    "Error when creating tags"
                    (fn [_status _out-stream] {})))
@@ -89,7 +113,7 @@
   (execute-vcs-cmd printers
                    app-dir
                    verbose
-                   (concat ["git" "push" "origin" version]
+                   (concat ["git" "push" "origin" version "--force-with-lease"]
                            (when force? ["--force"]))
                    :git-push
                    "Error when pushing tags"

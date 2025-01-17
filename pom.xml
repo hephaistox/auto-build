@@ -6,7 +6,7 @@
   <artifactId>auto-build</artifactId>
   <version>LATEST</version>
   <name>automan-build</name>
-  <description>Hephaistox common tasks for project manipulation</description>
+  <description>`auto-build` is a library to ease project cicd: build, test, deployment... </description>
   <url>https://github.com/hephaistox/auto-build</url>
 
   <licenses>

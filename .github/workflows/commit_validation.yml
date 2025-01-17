@@ -3,6 +3,7 @@ on:
   push:
      branches: '**'
      # This setup to commit on commit only - as the check is not tag dependant --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
+     # When the commit is rebase, it is most often creating a new predecessor so a new commit sha. It is made on purpose to test this again, in case the rebasing automatic conflict resolution would create something harmful
 jobs:
   clojure:
     permissions:
@@ -42,8 +43,6 @@ jobs:
           restore-keys: cljdeps-
       - name: Lint
         run: bb lint -v
-      - name: test auto-build code in clojure
-        run: bb clj-test test-bb test-unit -v
       - name: format again to check the code pushed was uptodate
         run: bb format -v
       - name: Write git diff - show what has been changed by zprint
@@ -55,3 +54,7 @@ jobs:
           fail-if-not-clean: true
           request-changes-if-not-clean: false
           push-if-not-clean: false
+      - name: print infos just for debugging, and the logs
+        run: bb heph-info
+      - name: test auto-build code in clojure
+        run: bb clj-test test-bb test-unit -v

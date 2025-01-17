@@ -33,7 +33,8 @@
         "Second deletion returns `nil`, as all non existing dir")))
 
 (deftest ensure-empty-dir-test
-  (is (= "tmp/build-file-test" (sut/ensure-empty-dir "tmp/build-file-test"))))
+  (is (let [tmp-dir (sut/create-temp-dir)]
+        (= tmp-dir (sut/ensure-empty-dir tmp-dir)))))
 
 (deftest copy-dir-test
   (comment

@@ -6,8 +6,8 @@
  :tasks
    {-base-deps {:doc "Dependencies for a task using bb"},
     :init (do (def ^:dynamic exit System/exit)),
-    :requires [;;NOTE Should be empty to ensure `lconnect` can start
-               ;;whatever the state of the code is.
+    :requires [;;NOTE Should be as small as possible to ensure `lconnect`
+               ;;can start whatever the state of the code is.
                [auto-build.os.exit-codes]],
     bp {:doc "Before push",
         :task (binding [exit (fn [exit-code & _]
@@ -33,13 +33,19 @@
                        [auto-build.echo :refer [level1-header]]],
             :task (some-> (task-deploy/deploy level1-header "." (current-task))
                           exit)},
+    docs {:doc "Docs",
+          :requires [[auto-build.tasks.docs :as build-docs]
+                     [auto-build.echo :refer [level1-header]]],
+          :task (some->
+                  (build-docs/docs level1-header "." (current-task) "gh-pages")
+                  exit)},
     format {:doc "Format",
             :requires [[auto-build.tasks.formatting :as task-format]
                        [auto-build.echo :refer [level1-header]]],
             :task (some-> (task-format/format level1-header "." (current-task))
                           exit)},
     heph-info {:doc "Hephaistox project info",
-               :extra-paths ["env/dev/src/cljc" "env/dev/resources"],
+               :extra-paths ["env/dev/src/clj" "env/dev/resources"],
                :requires [[auto-build.tasks.heph-info :as heph-info]
                           [auto-build.echo :refer [level1-header]]],
                :task (some-> (heph-info/heph-info level1-header (current-task))
@@ -49,8 +55,8 @@
                      [auto-build.echo :refer [level1-header]]],
           :task (some-> (task-lint/lint level1-header
                                         ["src" "test" "env/dev/test"
-                                         "env/dev/src/clj" "env/dev/src/cljc"
-                                         "env/dev/test" "env/unit/test"]
+                                         "env/dev/src/clj" "env/dev/test"
+                                         "env/unit/test"]
                                         "."
                                         (current-task))
                         exit)},

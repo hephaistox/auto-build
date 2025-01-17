@@ -13,6 +13,25 @@
             [clojure.java.io :as io]
             [clojure.string :as str]))
 
+(defn parameterize "Turns `cmd` to a cmd parameter" [cmd] (str "'\"" cmd "\"'"))
+
+(defn when-success?
+  "Returns `printers` if `res` is successful, `nil` otherwise"
+  ([res printers message] (when-success? res printers message nil))
+  ([{:keys [status], :as _res} {:keys [subtitle errorln], :as printers} message
+    error-message]
+   (if (= :success status)
+     (do (when message (subtitle message)) printers)
+     (do (when error-message (errorln error-message)) nil))))
+
+(defn final-cmd
+  "Returns the status and print the message if status is successful"
+  [{:keys [status], :as _res} {:keys [subtitle title], :as _printers} message
+   end-message]
+  (when message (subtitle message))
+  (when end-message (title end-message))
+  status)
+
 (defn- watch-proc-stream
   "Watch the `stream-kw` process in the `bb-proc` (babashka process) and listen to each new line in the stream:
   * stores the line in `a-stream`, an atom containing a fixed size queue of strings
