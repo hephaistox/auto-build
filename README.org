@@ -2,9 +2,14 @@
 #+author: Anthony CAUMOND
 # See full fledge org example here https://github.com/fniessen/refcard-org-mode/blob/master/README.org?plain=1
 
-[[https://github.com/hephaistox/auto-build/wiki][ Project wiki ]]|[[https://github.com/hephaistox/hephaistox/wiki][ Hephaistox wiki ]]| [[https://github.com/hephaistox/auto-build/discussions][ Discussions ]]
+[[https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml][https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml/badge.svg]] [[https://github.com/hephaistox/auto-build/actions/workflows/deploy_clojar.yml][https://github.com/hephaistox/auto-build/actions/workflows/deploy_clojar.yml/badge.svg]] [[https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment][https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment/badge.svg]]
 
-Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/blob/main/README.md][definitions]]).
+[[https://clojars.org/org.clojars.hephaistox/auto-build][https://img.shields.io/clojars/v/org.clojars.hephaistox/auto-build.svg]]
+
+[[https://github.com/hephaistox/hephaistox/wiki][https://img.shields.io/badge/wiki-hephaistox-blue.svg]] [[https://github.com/hephaistox/auto-build/wiki][https://img.shields.io/badge/wiki-project-blue.svg]] [[https://github.com/hephaistox/auto-build/discussions][https://img.shields.io/badge/discussions-blue.svg]]
+[[https://hephaistox.github.io/auto-build/][https://img.shields.io/badge/detailed-api-blue.svg]]
+
+Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/wiki][definitions]]).
 
 [[file:docs/img/automaton_small_duck.png]]
 
@@ -13,12 +18,16 @@ If every tool, when ordered, or even of its own accord, could do the work that b
 #+END_QUOTE
 
 * Main features
-** Features for our technical stack
-- Build clojure as jar and uberjar
-- Build clojurescript with shadow-cljs
+- Build and deploy clojure as jar and uberjar
+- Build and deploy clojurescript with shadow-cljs
+- Build API documentation
+- Update deps
 - Test, lint and format project code
+- Standardize repl
+- Build message for monorepo
 - For cli user interaction, execute commands with feedbacks on the cli with two modes: `heading` for a sequence of tasks organizeed as a tree, `actions` which suits for long lasting actions which feedbacks may be intertwine
-** Cli options
 
 * LICENCE
-See license information in [LICENSE file](LICENSE.md) Copyright © 2020-2024 Hephaistox
+See license information in [[LICENSE.md][Attribution-NonCommercial 4.0 International]]
+
+Copyright © 2020-2024 Hephaistox

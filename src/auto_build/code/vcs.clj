@@ -62,6 +62,28 @@
                    "Error when getting branch"
                    (fn [_status out-stream] {:branch-name (first out-stream)})))
 
+(defn switch-branch
+  "Switch to branch `branch-name`"
+  [printers app-dir verbose branch-name]
+  (execute-vcs-cmd printers
+                   app-dir
+                   verbose
+                   ["git" "switch" branch-name]
+                   :git-branch-switch
+                   "Error when switching branch"
+                   (fn [_status _out-stream] {})))
+
+(defn switch-branch-back
+  "Returns to previous branch"
+  [printers app-dir verbose]
+  (execute-vcs-cmd printers
+                   app-dir
+                   verbose
+                   ["git" "switch" "-"]
+                   :git-branch-switch
+                   "Error when switching branch"
+                   (fn [_status _out-stream] {})))
+
 (defn clean-hard
   "Returns a command to get the name of the current branch."
   [printers app-dir verbose]

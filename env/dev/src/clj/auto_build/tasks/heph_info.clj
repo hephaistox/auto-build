@@ -26,4 +26,4 @@
       (do (-> {:port (port-number)}
               pr-str
               println)
-          build-exit-codes/general-errors))))
+          build-exit-codes/ok))))

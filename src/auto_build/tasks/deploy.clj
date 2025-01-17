@@ -2,6 +2,7 @@
   (:require [auto-build.os.cli-opts :as build-cli-opts]
             [auto-build.code.vcs :as build-vcs]
             [auto-build.os.exit-codes :as build-exit-codes]
+            [auto-build.os.cmd :refer [when-success?]]
             [auto-build.project.map :as build-project-map]))
 
 ;; ********************************************************************************
@@ -35,17 +36,12 @@
         {:keys [message]} res]
     (normalln message)))
 
-(defn continue?
-  [{:keys [status], :as res} {:keys [subtitle], :as _printers} message]
-  (if (= :success status) (do (when message (subtitle message)) nil) res))
-
 (defn- do-tag
   [{:keys [subtitle uri-str], :as printers} app-dir]
   (subtitle "Tag" tag "with message" (uri-str message))
-  (or (-> (build-vcs/tag printers app-dir verbose tag message)
-          (continue? printers "Tagged is assigned"))
-      (-> (build-vcs/push-tag printers app-dir verbose tag force?)
-          (continue? printers "Tagged is pushed"))))
+  (some-> (build-vcs/tag printers app-dir verbose tag message)
+          (when-success? printers "Tagged is assigned")
+          (build-vcs/push-tag app-dir verbose tag force?)))
 
 (defn- deploy*
   [{:keys [title errorln normalln uri-str], :as printers} app-dir]
@@ -57,16 +53,15 @@
                         :branch-name)]
     (title "Deploy" (uri-str app-name) "version" tag)
     (if (= :main branch-name)
-      (let [run-wip (or (-> (build-vcs/clean-state printers app-dir verbose)
-                            (continue? printers "State is clean"))
-                        (-> (build-vcs/nothing-to-push printers app-dir verbose)
-                            (continue? printers "Remote branch is uptodate"))
-                        (build-vcs/gh-run-wip? printers app-dir verbose))
+      (let [run-wip (-> (build-vcs/clean-state printers app-dir verbose)
+                        (when-success? printers "State is clean")
+                        (build-vcs/nothing-to-push app-dir verbose)
+                        (when-success? printers "Remote branch is uptodate")
+                        (build-vcs/gh-run-wip? app-dir verbose))
             {:keys [status last-run]} run-wip]
         (case status
           :success (do (normalln "Commit is validated on github!")
-                       (do-tag printers app-dir)
-                       build-exit-codes/ok)
+                       (do-tag printers app-dir))
           :run-failed (do
                         (errorln "Commit is not validated")
                         (print-run-message printers app-dir (:run-id last-run))

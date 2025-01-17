@@ -1,6 +1,4 @@
 {:app-name "auto-build",
- :code {:forbidden-words ["TODO" "DONE" "NOTE" "FIXME" "tap>" "auto-core"
-                          "auto-web"]},
  :deps
    {:excluded-libs
       [{:doc
