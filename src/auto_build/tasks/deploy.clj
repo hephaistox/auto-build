@@ -52,30 +52,36 @@
   (let [uri-str (if (fn? uri-str) uri-str identity)
         project-map (->> (build-project-map/create-project-map app-dir)
                          (build-project-map/add-project-config printers))
-        {:keys [app-name]} project-map]
+        {:keys [app-name]} project-map
+        branch-name (-> (build-vcs/current-branch printers "" false)
+                        :branch-name)]
     (title "Deploy" (uri-str app-name) "version" tag)
-    (let [run-wip (or (-> (build-vcs/clean-state printers app-dir verbose)
-                          (continue? printers "State is clean"))
-                      (-> (build-vcs/nothing-to-push printers app-dir verbose)
-                          (continue? printers "Remote branch is uptodate"))
-                      (build-vcs/gh-run-wip? printers app-dir verbose))
-          {:keys [status last-run]} run-wip]
-      (case status
-        :success (do (normalln "Commit is validated on github!")
-                     (do-tag printers app-dir)
-                     build-exit-codes/ok)
-        :run-failed (do (errorln "Commit is not validated")
+    (if (= :main branch-name)
+      (let [run-wip (or (-> (build-vcs/clean-state printers app-dir verbose)
+                            (continue? printers "State is clean"))
+                        (-> (build-vcs/nothing-to-push printers app-dir verbose)
+                            (continue? printers "Remote branch is uptodate"))
+                        (build-vcs/gh-run-wip? printers app-dir verbose))
+            {:keys [status last-run]} run-wip]
+        (case status
+          :success (do (normalln "Commit is validated on github!")
+                       (do-tag printers app-dir)
+                       build-exit-codes/ok)
+          :run-failed (do
+                        (errorln "Commit is not validated")
                         (print-run-message printers app-dir (:run-id last-run))
                         build-exit-codes/invalid-state)
-        :wip (do (errorln "Commit validation is still in progress.")
-                 (print-run-message printers app-dir (:run-id last-run))
-                 build-exit-codes/invalid-state)
-        :dirty-state (do (errorln "Your local state is not clean.")
-                         build-exit-codes/invalid-state)
-        :not-pushed (do (errorln "Remote repo is not updated")
-                        build-exit-codes/invalid-state)
-        (do (errorln "Unexpected clause" status)
-            build-exit-codes/general-errors)))))
+          :wip (do (errorln "Commit validation is still in progress.")
+                   (print-run-message printers app-dir (:run-id last-run))
+                   build-exit-codes/invalid-state)
+          :dirty-state (do (errorln "Your local state is not clean.")
+                           build-exit-codes/invalid-state)
+          :not-pushed (do (errorln "Remote repo is not updated")
+                          build-exit-codes/invalid-state)
+          (do (errorln "Unexpected clause" status)
+              build-exit-codes/general-errors)))
+      (do (errorln "branch should be main, found" (uri-str branch-name))
+          build-exit-codes/general-errors))))
 
 (defn deploy
   [{:keys [errorln], :as printers} app-dir current-task]
