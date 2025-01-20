@@ -9,7 +9,7 @@
 [[https://github.com/hephaistox/hephaistox/wiki][https://img.shields.io/badge/wiki-hephaistox-blue.svg]] [[https://github.com/hephaistox/auto-build/wiki][https://img.shields.io/badge/wiki-project-blue.svg]] [[https://github.com/hephaistox/auto-build/discussions][https://img.shields.io/badge/discussions-blue.svg]]
 [[https://hephaistox.github.io/auto-build/][https://img.shields.io/badge/api-blue.svg]]
 
-Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/wiki][definitions]]).
+Auto-build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/wiki][definitions]]).
 
 [[file:docs/img/automaton_small_duck.png]]
 

@@ -10,7 +10,7 @@
             "`auto-build` is a library to ease project cicd: build, test, deployment...",
           :doc-paths ["docs/codox"],
           :metadata {:doc/format :markdown},
-          :name "Automaton build",
+          :name "auto-build",
           :source-uri
             "https://github.com/hephaistox/auto-build/blob/{version}/{filepath}#L{line}"},
        :exec-fn codox.main/generate-docs,
