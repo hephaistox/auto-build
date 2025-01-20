@@ -31,8 +31,8 @@
         {:keys [status]} filedesc]
     (merge {:edn-filepath edn-filepath, :status status, :filedesc filedesc}
            (when (= :success status)
-             (let [formatting-res (build-formatter/format-file printers
-                                                               edn-filepath)
+             (let [formatting-res
+                     (build-formatter/format-file printers "." edn-filepath)
                    {formatting-status :status} formatting-res]
                {:status formatting-status,
                 :formatting formatting-res,

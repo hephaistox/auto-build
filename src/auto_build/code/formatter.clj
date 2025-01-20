@@ -35,7 +35,7 @@
     ["zprint" "-w" (if (string? filepath) filepath (.getFile filepath))]))
 
 (defn format-file
-  [{:keys [normalln errorln uri-str], :as printers} filepath]
+  [{:keys [normalln errorln uri-str], :as printers} app-dir filepath]
   (let [{:keys [message status], :as formatter} (formatter-setup printers)]
     (if (= status :fail)
       (do (errorln "Can't format file"
@@ -45,7 +45,7 @@
           {:status :formatter-not-setup, :config-file formatter})
       (-> filepath
           format-file-cmd
-          (build-cmd/print-on-error "." normalln errorln 10 100 100)
+          (build-cmd/print-on-error app-dir normalln errorln 10 100 100)
           (assoc :config-file formatter)))))
 
 (defn format-clj-cmd

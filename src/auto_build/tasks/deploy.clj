@@ -65,7 +65,6 @@
                   "Error when checking if remote branch are uptodate")
                 (build-vcs/gh-run-wip? app-dir verbose))
             {:keys [status last-run]} run-wip]
-        (println "run-wip" (pr-str run-wip))
         (case status
           :success (do (normalln "Commit is validated on github!")
                        (if (= :success (:status (do-tag printers app-dir)))
@@ -96,5 +95,5 @@
         (deploy* printers app-dir)
         (do (when-not tag (errorln "Tag is mandatory"))
             (when-not message (errorln "Message is mandatory"))
-            (build-cli-opts/print-help-message cli-opts
-                                               (:name current-task)))))))
+            (build-cli-opts/print-help-message cli-opts (:name current-task))
+            build-exit-codes/ok)))))
