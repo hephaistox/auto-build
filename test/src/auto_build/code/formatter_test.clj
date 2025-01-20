@@ -54,7 +54,7 @@
             :status :success,
             :adir true,
             :config-file {:status :success, :zprintrc true}}
-           (-> (sut/format-file nil (io/resource "to_be_formated.edn"))
+           (-> (sut/format-file nil "." (io/resource "to_be_formated.edn"))
                (update :cmd-str string?)
                (update :bb-proc some?)
                (update :adir string?)
@@ -62,14 +62,14 @@
                (dissoc :cmd)))
         "Format an existing file")
     (is (= {:status :empty-cmd, :config-file {:status :success}}
-           (-> (sut/format-file nil (io/resource "non-existing-file"))
+           (-> (sut/format-file nil "." (io/resource "non-existing-file"))
                (update :config-file select-keys [:status])))
         "Format a non existing file"))
   (testing "What is printed"
     (is (= ""
            (->> "to_be_formated.edn"
                 io/resource
-                (sut/format-file {:normalln println, :errorln println})
+                (sut/format-file {:normalln println, :errorln println} ".")
                 with-out-str))
         "A successful file")
     #_(is (not= ""
