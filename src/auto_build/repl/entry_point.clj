@@ -1,6 +1,7 @@
 (ns auto-build.repl.entry-point
   "Entry point for repl"
-  (:require [auto-build.os.exit-codes :as exit-codes]
+  (:require [auto-build.echo :refer [level1-header]]
+            [auto-build.os.exit-codes :as exit-codes]
             [auto-build.os.colorized-text :refer [bg-red style-reset-all]]
             [auto-build.repl.port-number :refer [port-number]]
             [cider.nrepl.middleware :as mw]
@@ -17,7 +18,8 @@
 (defn -main
   "Entry point"
   [& _args]
-  (let [port (port-number)]
+  (let [printers level1-header
+        port (port-number printers)]
     (println "Start repl on port:" port)
     (try
       (start-server :port port :handler custom-nrepl-handler)

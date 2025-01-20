@@ -22,7 +22,7 @@
     clj-test {:doc "Test with clj",
               :requires [[auto-build.tasks.clj-test :as build-clj-test]
                          [auto-build.echo :refer [level1-header]]],
-              :task (some->> ["test-bb" "test-unit" "test-dev"]
+              :task (some->> ["test-bb" "test-unit"]
                              (build-clj-test/clj-test level1-header
                                                       "."
                                                       "clj-test-runner"
@@ -45,7 +45,6 @@
             :task (some-> (task-format/format level1-header "." (current-task))
                           exit)},
     heph-info {:doc "Hephaistox project info",
-               :extra-paths ["env/dev/src/clj" "env/dev/resources"],
                :requires [[auto-build.tasks.heph-info :as heph-info]
                           [auto-build.echo :refer [level1-header]]],
                :task (some-> (heph-info/heph-info level1-header (current-task))
@@ -54,9 +53,7 @@
           :requires [[auto-build.tasks.lint :as task-lint]
                      [auto-build.echo :refer [level1-header]]],
           :task (some-> (task-lint/lint level1-header
-                                        ["src" "test" "env/dev/test"
-                                         "env/dev/src/clj" "env/dev/test"
-                                         "env/unit/test"]
+                                        ["src" "test" "env/unit/test"]
                                         "."
                                         (current-task))
                         exit)},

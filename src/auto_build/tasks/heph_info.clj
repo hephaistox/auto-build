@@ -18,12 +18,12 @@
 
 (defn heph-info
   "Print project infos"
-  [{:keys [title], :as _printers} current-task]
+  [{:keys [title], :as printers} current-task]
   (title "Heph info")
   (let [exit-code (build-cli-opts/enter cli-opts current-task)]
     (if exit-code
       exit-code
-      (do (-> {:port (port-number)}
+      (do (-> {:port (port-number printers)}
               pr-str
               println)
           build-exit-codes/ok))))
