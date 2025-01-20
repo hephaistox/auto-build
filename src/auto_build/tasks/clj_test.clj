@@ -24,7 +24,7 @@
   [{:keys [errorln uri-str], :as printers} app-dir]
   (let [{:keys [status edn dir]} (build-deps/read printers app-dir)]
     (if-not (= :success status)
-      (do (errorln "`deps.edn` file is invalid in dir "
+      (do (errorln "`deps.edn` file is invalid in dir"
                    (-> dir
                        absolutize
                        uri-str))
