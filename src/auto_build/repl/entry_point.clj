@@ -1,30 +1,29 @@
 (ns auto-build.repl.entry-point
   "Entry point for repl"
-  (:require [auto-build.echo :refer [level1-header]]
-            [auto-build.os.exit-codes :as exit-codes]
-            [auto-build.os.colorized-text :refer [bg-red style-reset-all]]
-            [auto-build.repl.port-number :refer [port-number]]
-            [cider.nrepl.middleware :as mw]
-            [clojure.string :as str]
-            [nrepl.server :refer [default-handler start-server]]
-            [refactor-nrepl.middleware]))
+  (:require
+   [auto-build.echo          :refer [level1-header]]
+   [auto-build.os.exit-codes :as exit-codes]
+   [cider.nrepl.middleware   :as mw]
+   [clojure.string           :as str]
+   [nrepl.server             :refer [default-handler start-server]]
+   [refactor-nrepl.middleware]))
 
 (def custom-nrepl-handler
   "Custom nrepl handler."
   (apply default-handler
-    (conj cider.nrepl.middleware/cider-middleware
-          'refactor-nrepl.middleware/wrap-refactor)))
+         (conj cider.nrepl.middleware/cider-middleware 'refactor-nrepl.middleware/wrap-refactor)))
 
-(defn -main
+(defn start
   "Entry point"
-  [& _args]
-  (let [printers level1-header
-        port (port-number printers)]
-    (println "Start repl on port:" port)
-    (try
-      (start-server :port port :handler custom-nrepl-handler)
-      (spit ".nrepl-port" port)
-      (catch Exception e
-        (when (str/includes? (ex-message e) "Address already in use")
-          (println bg-red "Stopped as adress is already in use" style-reset-all)
-          (System/exit exit-codes/misuse))))))
+  [{:keys [port]} & _rargs]
+  (let [{:keys [normalln errorln exceptionln]
+         :as _printers}
+        level1-header]
+    (normalln "Start repl on port:" port)
+    (try (spit ".nrepl-port" port)
+         (start-server :port port :handler custom-nrepl-handler)
+         (let [blocking-promise (promise)] @blocking-promise)
+         (catch Exception e
+           (if (str/includes? (ex-message e) "Address already in use")
+             (do (errorln "Stopped as adress is already in use") (System/exit exit-codes/misuse))
+             (do (errorln "Unknown error") (exceptionln e)))))))
