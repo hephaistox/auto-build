@@ -1,8 +1,10 @@
 (ns auto-build.tasks.formatting
   (:refer-clojure :exclude [format])
-  (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.code.formatter :as build-formatter]
-            [auto-build.os.exit-codes :as build-exit-codes]))
+  (:require
+   [auto-build.code.formatter :as build-formatter]
+   [auto-build.os.cli-opts    :as build-cli-opts]
+   [auto-build.os.cmd         :as    build-cmd
+                              :refer [execute-if-success]]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -19,14 +21,30 @@
 ;; *** Task code
 ;; ********************************************************************************
 
+(defn format*
+  "Format project"
+  [printers app-dir]
+  (let [formatter-setup (build-formatter/formatter-setup printers)]
+    (when (= (:status formatter-setup) :success)
+      (-> {:status :success}
+          (execute-if-success
+           printers
+           app-dir
+           verbose
+           ["fd" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"]
+           "Format all files"
+           "Error during formatting"
+           nil)))))
+
 (defn format
   "Format project"
-  [{:keys [title], :as printers} app-dir current-task]
-  (title "Format")
-  (let [exit-code (build-cli-opts/enter cli-opts current-task)]
-    (cond exit-code exit-code
-          (= :success
-             (-> (build-formatter/format-clj printers app-dir verbose)
-                 :status))
-            build-exit-codes/ok
-          :else build-exit-codes/general-errors)))
+  [{:keys [title]
+    :as printers}
+   app-dir
+   current-task]
+  (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
+    exit-code
+    (let [title-msg "Formatting"]
+      (title title-msg)
+      (-> (format* printers app-dir)
+          (build-cmd/status-to-exit-code printers title-msg)))))

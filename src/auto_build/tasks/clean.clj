@@ -1,11 +1,10 @@
 (ns auto-build.tasks.clean
   "Clean some directories or files"
   (:require
-   [auto-build.os.cli-opts   :as build-cli-opts]
-   [auto-build.os.cmd        :as    build-cmd
-                             :refer [when-success?]]
-   [auto-build.os.exit-codes :as build-exit-codes]
-   [clojure.string           :as str]))
+   [auto-build.os.cli-opts :as build-cli-opts]
+   [auto-build.os.cmd      :as    build-cmd
+                           :refer [execute-if-success]]
+   [clojure.string         :as str]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -25,42 +24,48 @@
 ;; *** Task code
 ;; ********************************************************************************
 
-(defn- clean-file
-  [{:keys [normalln errorln]
-    :as _printers}
-   dir
-   filepaths]
-  (when verbose (normalln "Remove" (str/join "," filepaths)))
-  (build-cmd/print-on-error (reduce #(conj %1 %2) ["rm" "-f"] filepaths)
-                            dir
-                            normalln
-                            errorln
-                            10
-                            100
-                            100))
-
-(defn- clean-dirs
-  [{:keys [normalln errorln]
-    :as _printers}
-   dir
+(defn clean*
+  "Remove file from `filepaths` and directories from `dirs`"
+  [{:keys [uri-str]
+    :as printers}
+   app-dir
+   filepaths
    dirs]
-  (when verbose (normalln "Remove" (str/join "," dirs)))
-  (build-cmd/print-on-error (reduce #(conj %1 %2) ["rm" "-fr"] dirs)
-                            dir
-                            normalln
-                            errorln
-                            10
-                            100
-                            100))
+  (-> {:status :success}
+      (execute-if-success printers
+                          app-dir
+                          verbose
+                          (reduce #(conj %1 %2) ["rm" "-f"] filepaths)
+                          (->> filepaths
+                               (map uri-str)
+                               (str/join ", ")
+                               (str "Remove files "))
+                          "File deletion has failed"
+                          :remove-files
+                          nil)
+      (execute-if-success printers
+                          app-dir
+                          verbose
+                          (reduce #(conj %1 %2) ["rm" "-fr"] dirs)
+                          (->> dirs
+                               (map uri-str)
+                               (str/join ", ")
+                               (str "Remove dirs "))
+                          "Dir deletion has failed"
+                          :remove-dirs
+                          nil)))
 
 (defn clean
   "Remove file from `filepaths` and directories from `dirs`"
-  [printers dir filepaths dirs]
-  (if (= :success
-         (some-> printers
-                 (clean-file dir filepaths)
-                 (when-success? printers nil)
-                 (clean-dirs dir dirs)
-                 :status))
-    build-exit-codes/ok
-    build-exit-codes/general-errors))
+  [{:keys [title]
+    :as printers}
+   app-dir
+   filepaths
+   dirs
+   current-task]
+  (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
+    exit-code
+    (let [title-msg "Cleaning temporary files"]
+      (title title-msg)
+      (-> (clean* printers app-dir filepaths dirs)
+          (build-cmd/status-to-exit-code printers title-msg)))))

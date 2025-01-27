@@ -1,9 +1,10 @@
 (ns auto-build.tasks.clj-test
-  (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.project.deps :as build-deps]
-            [auto-build.os.exit-codes :as build-exit-codes]
-            [auto-build.code.clj-compile :refer [compile-alias]]
-            [auto-build.os.filename :refer [absolutize]]))
+  (:require
+   [auto-build.code.clj-compile :refer [compile-alias]]
+   [auto-build.os.cli-opts      :as build-cli-opts]
+   [auto-build.os.exit-codes    :as build-exit-codes]
+   [auto-build.os.filename      :refer [absolutize]]
+   [auto-build.project.deps     :as build-deps]))
 
 ; ********************************************************************************
 ; *** Task setup
@@ -21,7 +22,9 @@
 ; ********************************************************************************
 
 (defn- aliases-in-deps-edn
-  [{:keys [errorln uri-str], :as printers} app-dir]
+  [{:keys [errorln uri-str]
+    :as printers}
+   app-dir]
   (let [{:keys [status edn dir]} (build-deps/read printers app-dir)]
     (if-not (= :success status)
       (do (errorln "`deps.edn` file is invalid in dir"
@@ -40,11 +43,14 @@
 
 (defn clj-test*
   "Run tests"
-  [{:keys [subtitle title-valid title-error], :as printers}
-   {:keys [valid-args], :as _cli-opts} app-dir test-runner-alias verbose]
-  (let [exit-codes
-          (mapv #(compile-alias printers verbose app-dir test-runner-alias %)
-            valid-args)]
+  [{:keys [subtitle title-valid title-error]
+    :as printers}
+   {:keys [valid-args]
+    :as _cli-opts}
+   app-dir
+   test-runner-alias
+   verbose]
+  (let [exit-codes (mapv #(compile-alias printers verbose app-dir test-runner-alias %) valid-args)]
     (subtitle "clj-test of" valid-args)
     (if (every? #(= :success (:status %)) exit-codes)
       (do (title-valid "Tests passed") build-exit-codes/ok)
@@ -52,8 +58,12 @@
 
 (defn clj-test
   "Run tests. Return an exit code"
-  [{:keys [title exceptionln errorln], :as printers} app-dir test-runner-alias
-   current-task test-definitions]
+  [{:keys [title exceptionln errorln]
+    :as printers}
+   app-dir
+   test-runner-alias
+   current-task
+   test-definitions]
   (title "clj-test")
   (try (if-let [aliases-in-deps-edn (aliases-in-deps-edn printers app-dir)]
          (let [cli-opts (cli-opts test-definitions aliases-in-deps-edn)
@@ -62,9 +72,7 @@
                                                               current-task
                                                               "TEST-ALIASES"
                                                               test-definitions)]
-           (if exit-code
-             exit-code
-             (clj-test* printers cli-opts app-dir test-runner-alias verbose)))
+           (if exit-code exit-code (clj-test* printers cli-opts app-dir test-runner-alias verbose)))
          build-exit-codes/invalid-state)
        (catch Exception e
          (errorln "Unexpected error:")

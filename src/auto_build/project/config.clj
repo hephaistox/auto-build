@@ -1,8 +1,9 @@
 (ns auto-build.project.config
   "Loads `project` configuration file."
   (:refer-clojure :exclude [read])
-  (:require [auto-build.os.edn-utils :as build-edn]
-            [auto-build.os.filename :as build-filename]))
+  (:require
+   [auto-build.os.edn-utils :as build-edn]
+   [auto-build.os.filename  :as build-filename]))
 
 (def project-cfg-filename "project.edn")
 

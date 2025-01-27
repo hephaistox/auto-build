@@ -9,6 +9,7 @@
   (:refer-clojure :exclude [delay])
   (:require
    [auto-build.data.fixed-size-queue :as build-fix-size-queue]
+   [auto-build.os.exit-codes         :as build-exit-codes]
    [auto-build.os.filename           :as build-filename]
    [babashka.process                 :as p]
    [clojure.java.io                  :as io]
@@ -213,24 +214,79 @@
 
   This command is non blocking"
   [cmd dir on-out on-err on-end delay]
-  (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" %) 0 0))
+  (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" % "in dir" dir) 0 0))
 
 (defn printing
   "Print the whole command execution on the terminal. Is blocking until the end."
   [cmd dir on-out on-err delay]
   (when on-out (on-out "Execute" cmd))
-  (-> (create-process cmd dir on-out on-err nil delay #(on-err "Cant' start" %) 0 0)
+  (-> (create-process cmd dir on-out on-err nil delay #(on-err "Cant' start" % "in dir" dir) 0 0)
       (wait-for nil nil)))
 
 (defn print-on-error
   "Does not print on the terminal, except if an error occur."
   [cmd dir on-out on-err delay max-out-lines max-err-lines]
-  (->
-    (create-process cmd dir nil nil nil delay #(on-err "Cant' start" %) max-out-lines max-err-lines)
-    (wait-for on-out on-err)))
+  (-> (create-process cmd
+                      dir
+                      nil
+                      nil
+                      nil
+                      delay
+                      #(on-err "Cant' start" % "in dir" dir)
+                      max-out-lines
+                      max-err-lines)
+      (wait-for on-out on-err)))
 
 (defn print-verbosely
   [verbose cmd dir on-out on-err delay max-out-lines max-err-lines]
   (if verbose
     (printing cmd dir on-out on-err delay)
     (print-on-error cmd dir on-out on-err delay max-out-lines max-err-lines)))
+
+(defn execute-if-success
+  ([previous-res printers app-dir verbose cmd subtitle-msg concept-kw stream-to-res-fn]
+   (execute-if-success previous-res
+                       printers
+                       app-dir
+                       verbose
+                       cmd
+                       subtitle-msg
+                       (str "Error during " subtitle-msg)
+                       concept-kw
+                       stream-to-res-fn))
+  ([{previous-status :status
+     :as previous-res}
+    {:keys [normalln errorln subtitle]
+     :as _printers}
+    app-dir
+    verbose
+    cmd
+    subtitle-msg
+    error-msg
+    concept-kw
+    stream-to-res-fn]
+   (if (= :success previous-status)
+     (do (when (fn? subtitle) (subtitle subtitle-msg))
+         (when verbose (normalln "Execute" cmd))
+         (let [res (print-on-error cmd app-dir normalln errorln 10 100 100)
+               {:keys [status out-stream]} res
+               updated-res (merge res
+                                  (when (and (= status :success) (fn? stream-to-res-fn))
+                                    (stream-to-res-fn status out-stream)))]
+           (merge previous-res
+                  {:status status
+                   concept-kw res}
+                  (when-not (= (:status updated-res) :success)
+                    (errorln error-msg)
+                    {:status :cmd-failed}))))
+     (do (subtitle "Skip:" subtitle-msg) (assoc previous-res concept-kw :skipped)))))
+
+(defn status-to-exit-code
+  [{:keys [status]
+    :as _previous-res}
+   {:keys [title-valid title-error]
+    :as _printers}
+   message]
+  (if (= :success status)
+    (do (title-valid message "is successful") build-exit-codes/ok)
+    (do (title-error message "has failed") build-exit-codes/general-errors)))

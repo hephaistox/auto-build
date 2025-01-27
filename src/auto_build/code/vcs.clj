@@ -2,21 +2,29 @@
   "Version Control System.
 
   Proxy to [git](https://git-scm.com/book/en/v2)."
-  (:require [auto-build.os.file :as build-file]
-            [auto-build.os.filename :as build-filename]
-            [auto-build.os.cmd :as build-cmd]
-            [clojure.string :as str]))
+  (:require
+   [auto-build.os.cmd      :as build-cmd]
+   [auto-build.os.file     :as build-file]
+   [auto-build.os.filename :as build-filename]
+   [clojure.string         :as str]))
 
 ;; ********************************************************************************
 ;; Private
 ;; ********************************************************************************
 (defn- execute-vcs-cmd
-  [{:keys [normalln errorln], :as _printers} app-dir verbose cmd concept-kw
-   error-msg out-stream-fn]
+  [{:keys [normalln errorln]
+    :as _printers}
+   app-dir
+   verbose
+   cmd
+   concept-kw
+   error-msg
+   out-stream-fn]
   (when verbose (normalln "Execute" cmd))
   (let [res (build-cmd/as-string cmd app-dir 100 100)
         {:keys [status out-stream err-stream]} res]
-    (merge {:status status, concept-kw res}
+    (merge {:status status
+            concept-kw res}
            (if (= status :success)
              (out-stream-fn status out-stream)
              (do (errorln error-msg)
@@ -127,8 +135,7 @@
 (defn spit-hook
   "Spit the `content` in the hook called `hook-name` of `app-dir` repo."
   [printers app-dir hook-name content]
-  (let [hook-filename
-          (build-filename/create-file-path app-dir ".git" "hooks" hook-name)]
+  (let [hook-filename (build-filename/create-file-path app-dir ".git" "hooks" hook-name)]
     (build-file/write-file hook-filename printers content)
     (-> (build-file/make-executable hook-filename)
         str)))
@@ -158,23 +165,21 @@
 (defn nothing-to-push
   "Returns `status` to `success` if nothing pushed, `not-pushed`"
   [printers app-dir verbose]
-  (execute-vcs-cmd
-    printers
-    app-dir
-    verbose
-    ["git" "status"]
-    :git-status
-    "Error when getting git status"
-    (fn [status out-stream]
-      {:status (if (and (= status :success)
-                        (->> out-stream
-                             (filter #(str/includes?
-                                        %
-                                        "Your branch is up to date with"))
-                             first
-                             empty?))
-                 :not-pushed
-                 :success)})))
+  (execute-vcs-cmd printers
+                   app-dir
+                   verbose
+                   ["git" "status"]
+                   :git-status
+                   "Error when getting git status"
+                   (fn [status out-stream]
+                     {:status (if (and (= status :success)
+                                       (->> out-stream
+                                            (filter
+                                             #(str/includes? % "Your branch is up to date with"))
+                                            first
+                                            empty?))
+                                :not-pushed
+                                :success)})))
 
 (defn current-tag
   "Returns a command to detect clean state"
@@ -200,8 +205,7 @@
                      {:repo-url (->> out-stream
                                      (map (fn [line]
                                             (->> line
-                                                 (re-find
-                                                   #"origin\s*([^\s]*).*(push)")
+                                                 (re-find #"origin\s*([^\s]*).*(push)")
                                                  second)))
                                      (filter some?)
                                      first)})))
@@ -217,16 +221,13 @@
                              "Error when getting github run list"
                              (fn [_status out-stream]
                                {:last-run
-                                  (let [res (last out-stream)]
-                                    (cond-> {:run-id (->> (str/split res #"\t")
-                                                          (drop 6)
-                                                          first)}
-                                      (re-find #"completed\tsuccess" res)
-                                        (assoc :status :success)
-                                      (re-find #"completed\tfailure" res)
-                                        (assoc :status :run-failed)
-                                      (not (re-find #"completed\t" res))
-                                        (assoc :status :wip)))}))]
+                                (let [res (last out-stream)]
+                                  (cond-> {:run-id (->> (str/split res #"\t")
+                                                        (drop 6)
+                                                        first)}
+                                    (re-find #"completed\tsuccess" res) (assoc :status :success)
+                                    (re-find #"completed\tfailure" res) (assoc :status :run-failed)
+                                    (not (re-find #"completed\t" res)) (assoc :status :wip)))}))]
     (assoc res :status (get-in res [:last-run :status]))))
 
 (defn gh-run-view
@@ -239,4 +240,5 @@
                    :gh-run-view
                    "Error when getting github view"
                    (fn [_status out-stream]
-                     {:run-id run-id, :message (first out-stream)})))
+                     {:run-id run-id
+                      :message (first out-stream)})))

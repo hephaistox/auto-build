@@ -1,11 +1,10 @@
 (ns auto-build.project.deps
   (:refer-clojure :exclude [read])
-  (:require [auto-build.os.edn-utils :as build-edn-utils]
-            [auto-build.os.filename :as build-filename]))
+  (:require
+   [auto-build.os.edn-utils :as build-edn-utils]
+   [auto-build.os.filename  :as build-filename]))
 
-(defn deps-edn-filename
-  [app-dir]
-  (build-filename/create-file-path app-dir "deps.edn"))
+(defn deps-edn-filename [app-dir] (build-filename/create-file-path app-dir "deps.edn"))
 
 (defn read
   "Returns a map with

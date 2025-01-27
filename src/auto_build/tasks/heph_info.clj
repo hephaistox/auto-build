@@ -1,7 +1,8 @@
 (ns auto-build.tasks.heph-info
-  (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.repl.port-number :refer [port-number]]
-            [auto-build.os.exit-codes :as build-exit-codes]))
+  (:require
+   [auto-build.os.cli-opts      :as build-cli-opts]
+   [auto-build.os.exit-codes    :as build-exit-codes]
+   [auto-build.repl.port-number :refer [port-number]]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -18,7 +19,9 @@
 
 (defn heph-info
   "Print project infos"
-  [{:keys [title], :as printers} current-task]
+  [{:keys [title]
+    :as printers}
+   current-task]
   (title "Heph info")
   (let [exit-code (build-cli-opts/enter cli-opts current-task)]
     (if exit-code

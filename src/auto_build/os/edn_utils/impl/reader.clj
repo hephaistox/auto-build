@@ -2,15 +2,19 @@
   "Read an implementation edn.
 
   Note: Is apart from write as write needs formatting and formatting needs to read zprintrc."
-  (:require [auto-build.os.file :as build-file]
-            [auto-build.os.filename :as build-filename]
-            [clojure.edn :as edn]))
+  (:require
+   [auto-build.os.file     :as build-file]
+   [auto-build.os.filename :as build-filename]
+   [clojure.edn            :as edn]))
 
 (defn read-edn
-  [{:keys [errorln uri-str exception-msg], :as printers} edn-filename]
+  [{:keys [errorln uri-str exception-msg]
+    :as printers}
+   edn-filename]
   (let [filedesc (build-file/read-file printers edn-filename)
         {:keys [raw-content status]} filedesc]
-    (merge {:filedesc filedesc, :status status}
+    (merge {:filedesc filedesc
+            :status status}
            (when (= :success status)
              (try {:edn (edn/read-string raw-content)}
                   (catch Exception e
@@ -21,4 +25,5 @@
                                    build-filename/absolutize)
                                "is not a valid edn.")
                       (when exception-msg (exception-msg e)))
-                    {:exception e, :status :edn-failed}))))))
+                    {:exception e
+                     :status :edn-failed}))))))

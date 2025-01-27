@@ -15,10 +15,7 @@
 
 (def invalid-argument "128: Invalid argument to exit" 128)
 
-(defn fatal-error-signal
-  "128+n: Fatal error signal \"n\""
-  [signal]
-  (+ 128 signal))
+(defn fatal-error-signal "128+n: Fatal error signal \"n\"" [signal] (+ 128 signal))
 
 (def unexpected-exception 129)
 

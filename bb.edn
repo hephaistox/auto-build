@@ -20,19 +20,21 @@
   clean {:doc "Clean temporary files"
          :requires [[auto-build.tasks.clean :as task-clean]
                     [auto-build.echo :refer [level1-header]]]
-         :task (some->> (task-clean/clean level1-header "." [".DS_Store"] [".cpcache"])
-                        exit)}
+         :task (-> (task-clean/clean level1-header "." [".DS_Store"] [".cpcache"] (current-task))
+                   exit)}
   clj-test {:doc "Test with clj"
             :requires [[auto-build.tasks.clj-test :as build-clj-test]
                        [auto-build.echo :refer [level1-header]]]
-            :task (some->>
-                    ["test-bb" "test-unit"]
-                    (build-clj-test/clj-test level1-header "." "clj-test-runner" (current-task))
-                    exit)}
+            :task (-> (build-clj-test/clj-test level1-header
+                                               "."
+                                               "clj-test-runner"
+                                               (current-task)
+                                               ["test-bb" "test-unit"])
+                      exit)}
   deploy {:doc "Deploy"
           :requires [[auto-build.tasks.deploy :as task-deploy]
                      [auto-build.echo :refer [level1-header]]]
-          :task (some-> (task-deploy/deploy level1-header "." (current-task))
+          :task (some-> (task-deploy/deploy level1-header "." "main" (current-task))
                         exit)}
   docs {:doc "Docs"
         :requires [[auto-build.tasks.docs :as build-docs] [auto-build.echo :refer [level1-header]]]

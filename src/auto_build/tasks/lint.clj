@@ -1,7 +1,9 @@
 (ns auto-build.tasks.lint
-  (:require [auto-build.os.cli-opts :as build-cli-opts]
-            [auto-build.os.cmd :as build-cmd]
-            [auto-build.os.exit-codes :as build-exit-codes]))
+  (:require
+   [auto-build.os.cli-opts :as build-cli-opts]
+   [auto-build.os.cmd      :as    build-cmd
+                           :refer [execute-if-success]]
+   [clojure.string         :as str]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -29,30 +31,35 @@
                 paths)
         vec)))
 
+(defn lint*
+  [{:keys [uri-str]
+    :as printers}
+   app-dir
+   subdirs]
+  (-> {:status :success}
+      (execute-if-success printers
+                          app-dir
+                          verbose
+                          (lint-cmd verbose subdirs)
+                          (->> subdirs
+                               (mapv uri-str)
+                               (str/join ", ")
+                               (str "Lint subdirs: "))
+                          "Linting has failed"
+                          nil)))
+
 (defn lint
   "Lint `paths`
 
   if `debug?` is `true`,  linter provides detailed informations"
-  [{:keys [normalln errorln title], :as _printers} subdirs app-dir current-task]
-  (let [debug? verbose
-        exit-code (build-cli-opts/enter cli-opts current-task)]
-    (title "Linting")
-    (if exit-code
-      exit-code
-      (let [linting-cmd-res (if verbose
-                              (build-cmd/printing (lint-cmd debug? subdirs)
-                                                  app-dir
-                                                  normalln
-                                                  errorln
-                                                  10)
-                              (build-cmd/print-on-error (lint-cmd debug?
-                                                                  subdirs)
-                                                        app-dir
-                                                        normalln
-                                                        errorln
-                                                        10
-                                                        100
-                                                        100))]
-        (if (= :success (:status linting-cmd-res))
-          build-exit-codes/ok
-          build-exit-codes/general-errors)))))
+  [{:keys [title]
+    :as printers}
+   subdirs
+   app-dir
+   current-task]
+  (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
+    exit-code
+    (let [title-msg "Linting"]
+      (title title-msg)
+      (-> (lint* printers app-dir subdirs)
+          (build-cmd/status-to-exit-code printers title-msg)))))

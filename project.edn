@@ -1,6 +1,4 @@
-{:app-name "auto-build",
- :deps
-   {:excluded-libs
-      [{:doc
-          "0.16.3 has deprecated warnings, fix is already in main merged but not released yet",
-        :name "metosin/malli"}]}}
+{:app-name "auto-build"
+ :deps {:excluded-libs
+        [{:doc "0.16.3 has deprecated warnings, fix is already in main merged but not released yet"
+          :name "metosin/malli"}]}}

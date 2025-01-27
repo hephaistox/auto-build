@@ -1,7 +1,8 @@
 (ns auto-build.project.shadow
   (:refer-clojure :exclude [read])
-  (:require [auto-build.os.edn-utils :as build-edn-utils]
-            [auto-build.os.filename :as build-filename]))
+  (:require
+   [auto-build.os.edn-utils :as build-edn-utils]
+   [auto-build.os.filename  :as build-filename]))
 
 (defn shadow-cljs-edn-filename
   [app-dir]
@@ -28,6 +29,4 @@
   * `:raw-content`
   * `:exception` (only if `:status` is `:fail`)"
   [printers app-dir content]
-  (build-edn-utils/write-edn printers
-                             (shadow-cljs-edn-filename app-dir)
-                             content))
+  (build-edn-utils/write-edn printers (shadow-cljs-edn-filename app-dir) content))
