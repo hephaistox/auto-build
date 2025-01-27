@@ -213,21 +213,28 @@
 
   This command is non blocking"
   [cmd dir on-out on-err on-end delay]
-  (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" %) 0 0))
+  (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" % "in dir" dir) 0 0))
 
 (defn printing
   "Print the whole command execution on the terminal. Is blocking until the end."
   [cmd dir on-out on-err delay]
   (when on-out (on-out "Execute" cmd))
-  (-> (create-process cmd dir on-out on-err nil delay #(on-err "Cant' start" %) 0 0)
+  (-> (create-process cmd dir on-out on-err nil delay #(on-err "Cant' start" % "in dir" dir) 0 0)
       (wait-for nil nil)))
 
 (defn print-on-error
   "Does not print on the terminal, except if an error occur."
   [cmd dir on-out on-err delay max-out-lines max-err-lines]
-  (->
-    (create-process cmd dir nil nil nil delay #(on-err "Cant' start" %) max-out-lines max-err-lines)
-    (wait-for on-out on-err)))
+  (-> (create-process cmd
+                      dir
+                      nil
+                      nil
+                      nil
+                      delay
+                      #(on-err "Cant' start" % "in dir" dir)
+                      max-out-lines
+                      max-err-lines)
+      (wait-for on-out on-err)))
 
 (defn print-verbosely
   [verbose cmd dir on-out on-err delay max-out-lines max-err-lines]
