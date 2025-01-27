@@ -1,8 +1,9 @@
 (ns auto-build.echo.base
   "Common functions for echoing."
-  (:require [auto-build.os.colorized-text :as build-text]
-            [clojure.pprint :as pp]
-            [clojure.string :as str]))
+  (:require
+   [auto-build.os.colorized-text :as build-text]
+   [clojure.pprint               :as pp]
+   [clojure.string               :as str]))
 
 ;; ********************************************************************************
 ;; Store echoing parameters
@@ -42,8 +43,7 @@
 (defn print-writter
   "Print `str-writter` if necessary it contains something."
   [str-writter]
-  (let [str-writter (str str-writter)]
-    (when-not (str/blank? str-writter) (print str-writter))))
+  (let [str-writter (str str-writter)] (when-not (str/blank? str-writter) (print str-writter))))
 
 (defn pprint-str "Pretty print `data`" [data] (with-out-str (pp/pprint data)))
 
@@ -63,13 +63,13 @@
 
 (def printers
   "Generic printers defined - printing raw text on the terminal"
-  {:cmd-str cmd-str,
-   :uri-str uri-str,
-   :exception-str exception-str,
-   :exceptionln exceptionln,
-   :current-time-str current-time-str,
-   :build-writter build-writter,
-   :print-writter print-writter,
-   :pprint-str pprint-str,
-   :normalln normalln,
+  {:cmd-str cmd-str
+   :uri-str uri-str
+   :exception-str exception-str
+   :exceptionln exceptionln
+   :current-time-str current-time-str
+   :build-writter build-writter
+   :print-writter print-writter
+   :pprint-str pprint-str
+   :normalln normalln
    :errorln errorln})

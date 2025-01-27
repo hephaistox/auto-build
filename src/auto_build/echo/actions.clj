@@ -2,9 +2,11 @@
   "Echoing actions in terminal
 
   It is specially made for long living and possibly parrallel actions (like REPL and so on.)."
-  (:require [auto-build.echo.base :as build-echo-base :refer [cmd-str]]
-            [auto-build.os.colorized-text :as build-text]
-            [clojure.string :as str]))
+  (:require
+   [auto-build.echo.base         :as    build-echo-base
+                                 :refer [cmd-str]]
+   [auto-build.os.colorized-text :as build-text]
+   [clojure.string               :as str]))
 
 ;; ********************************************************************************
 ;; Private
@@ -33,9 +35,7 @@
 
   It should be highlighted and rare (like one line red for each error and not its details)."
   [prefixs & texts]
-  (when-not (empty? texts)
-    (print build-text/font-red)
-    (pure-printing prefixs texts)))
+  (when-not (empty? texts) (print build-text/font-red) (pure-printing prefixs texts)))
 
 (defn exceptionln
   "Display exception `e`."
@@ -60,8 +60,8 @@
 (def printers
   "Printers for actions"
   (merge build-echo-base/printers
-         {:normalln normalln,
-          :errorln errorln,
-          :exceptionln exceptionln,
-          :print-exec-cmd print-exec-cmd,
+         {:normalln normalln
+          :errorln errorln
+          :exceptionln exceptionln
+          :print-exec-cmd print-exec-cmd
           :action action}))

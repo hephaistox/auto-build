@@ -58,6 +58,4 @@
 
 (defn underline [text] (str style-underline text style-nounderline))
 
-(defn line-with-bg
-  [text color]
-  (str style-reset-all color text clear-eol style-reset-all))
+(defn line-with-bg [text color] (str style-reset-all color text clear-eol style-reset-all))

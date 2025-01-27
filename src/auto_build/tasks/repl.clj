@@ -18,18 +18,21 @@
 ;; *** Task code
 ;; ********************************************************************************
 
+(defn repl*
+  [app-dir]
+  (-> (p/shell {:continue true
+                :dir app-dir}
+               "clojure"
+               "-X:repl")
+      :exit))
+
 (defn repl
   [{:keys [title]
     :as _printers}
    app-dir
    current-task]
-  (title "Start clj repl")
-  (when verbose (println "Execute [clojure -X:repl]"))
-  (let [exit-code (build-cli-opts/enter cli-opts current-task)]
-    (if exit-code
-      exit-code
-      (-> (p/shell {:continue true
-                    :dir app-dir}
-                   "clojure"
-                   "-X:repl")
-          :exit))))
+  (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
+    exit-code
+    (let [title-msg "Start clj repl"]
+      (title title-msg)
+      (repl* app-dir))))

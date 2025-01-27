@@ -1,7 +1,8 @@
 (ns auto-build.os.filename
   "Manipulate file names (is not influenced at all by your local configuration)."
-  (:require [babashka.fs :as fs]
-            [clojure.string :as str]))
+  (:require
+   [babashka.fs    :as fs]
+   [clojure.string :as str]))
 
 (def directory-separator
   "Symbol to separate directories.
@@ -30,8 +31,7 @@
   "Returns true if the `filename` match the at least one of the `extensions`."
   [filename & extensions]
   (boolean (when-not (str/blank? filename)
-             (some (fn [extension] (str/ends-with? filename extension))
-                   extensions))))
+             (some (fn [extension] (str/ends-with? filename extension)) extensions))))
 
 (defn change-extension
   "Turns `filename` extension into `new-extension`."
@@ -55,9 +55,7 @@
   "Creates a path with the list of parameters.
   Removes the empty strings, add needed separators, including the trailing ones"
   [& dirs]
-  (if (empty? dirs)
-    "."
-    (str (apply create-file-path dirs) directory-separator)))
+  (if (empty? dirs) "." (str (apply create-file-path dirs) directory-separator)))
 
 (defn relativize
   "Turn the `path` into a relative directory starting from `root-dir`"
@@ -82,21 +80,17 @@
   "Extract the directory path to the `filename`."
   [filename]
   (when-not (str/blank? filename)
-    (if (or (fs/directory? filename)
-            (= directory-separator (str (last filename))))
+    (if (or (fs/directory? filename) (= directory-separator (str (last filename))))
       filename
       (let [filepath (->> filename
                           fs/components
                           butlast
                           (mapv str))]
-        (cond (= [] filepath) ""
-              (is-absolute? filename)
-                (apply create-dir-path directory-separator filepath)
-              :else (apply create-dir-path filepath))))))
+        (cond
+          (= [] filepath) ""
+          (is-absolute? filename) (apply create-dir-path directory-separator filepath)
+          :else (apply create-dir-path filepath))))))
 
 (defn parent "Returns the parent of `path`." [path] (fs/parent path))
 
-(defn filename
-  "Returns the filename of a path."
-  [full-path]
-  (fs/file-name full-path))
+(defn filename "Returns the filename of a path." [full-path] (fs/file-name full-path))

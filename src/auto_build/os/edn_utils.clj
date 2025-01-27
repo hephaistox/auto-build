@@ -1,8 +1,9 @@
 (ns auto-build.os.edn-utils
   "Read an edn file."
-  (:require [auto-build.code.formatter :as build-formatter]
-            [auto-build.os.edn-utils.impl.reader]
-            [auto-build.os.file :as build-file]))
+  (:require
+   [auto-build.code.formatter :as build-formatter]
+   [auto-build.os.edn-utils.impl.reader]
+   [auto-build.os.file        :as build-file]))
 
 (defn read-edn
   "Read `edn-filename` and returns a map with:
@@ -29,11 +30,12 @@
   [edn-filepath printers content]
   (let [filedesc (build-file/write-file edn-filepath printers content)
         {:keys [status]} filedesc]
-    (merge {:edn-filepath edn-filepath, :status status, :filedesc filedesc}
+    (merge {:edn-filepath edn-filepath
+            :status status
+            :filedesc filedesc}
            (when (= :success status)
-             (let [formatting-res
-                     (build-formatter/format-file printers "." edn-filepath)
+             (let [formatting-res (build-formatter/format-file printers "." edn-filepath)
                    {formatting-status :status} formatting-res]
-               {:status formatting-status,
-                :formatting formatting-res,
+               {:status formatting-status
+                :formatting formatting-res
                 :filedesc filedesc})))))
