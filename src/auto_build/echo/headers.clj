@@ -2,22 +2,25 @@
   "Prints text with headers on the terminal.
 
   Each content is modified to wrap the `width` of the terminal, and is modified to have a left margin."
-  (:require [auto-build.echo.base :as build-echo-base]
-            [auto-build.os.colorized-text :as build-text]))
+  (:require
+   [auto-build.echo.base         :as build-echo-base]
+   [auto-build.os.colorized-text :as build-text]))
 
 ;; ********************************************************************************
 ;; Private
 ;; ********************************************************************************
 (defn- current-left-margin
   "Returns the string of the margin to add."
-  []
-  (->> (-> @build-echo-base/echo-param
-           (get :section 0)
-           (repeat \space))
-       (apply str)))
+  ([] (current-left-margin 0))
+  ([delta]
+   (->> (-> @build-echo-base/echo-param
+            (get :section 0)
+            (+ delta)
+            (repeat \space))
+        (apply str))))
 
 ;; Standardized echoing functions
-(defn- pure-printing [texts] (apply println (conj texts (current-left-margin))))
+(defn- pure-printing [texts] (apply println (conj texts (current-left-margin 2))))
 
 (defn header-printing
   "Print `texts` with the header prefix called `prefix`."
@@ -41,11 +44,7 @@
   (pure-printing texts)
   (print build-text/font-default))
 
-(defn exceptionln
-  "Display exception `e`."
-  [e]
-  (errorln (ex-cause e))
-  (normalln (pr-str e)))
+(defn exceptionln "Display exception `e`." [e] (errorln (ex-cause e)) (normalln (pr-str e)))
 
 (defn print-cmd
   "Prints the execution of command string `cmd` with the `prefixs` added."
@@ -128,16 +127,16 @@
 (def printers
   "Printers for headers"
   (merge build-echo-base/printers
-         {:normalln normalln,
-          :errorln errorln,
-          :exceptionln exceptionln,
-          :print-cmd print-cmd,
-          :h1 h1,
-          :h2 h2,
-          :h3 h3,
-          :h1-valid h1-valid,
-          :h2-valid h2-valid,
-          :h3-valid h3-valid,
-          :h1-error h1-error,
-          :h2-error h2-error,
+         {:normalln normalln
+          :errorln errorln
+          :exceptionln exceptionln
+          :print-cmd print-cmd
+          :h1 h1
+          :h2 h2
+          :h3 h3
+          :h1-valid h1-valid
+          :h2-valid h2-valid
+          :h3-valid h3-valid
+          :h1-error h1-error
+          :h2-error h2-error
           :h3-error h3-error}))
