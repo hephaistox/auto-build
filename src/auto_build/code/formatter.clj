@@ -54,8 +54,3 @@
           format-file-cmd
           (build-cmd/print-on-error app-dir normalln errorln 10 100 100)
           (assoc :config-file formatter)))))
-
-(defn format-clj-cmd
-  "Command formatting all clj files in the directory and subdirectories where it is executed."
-  []
-  ["fd" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])

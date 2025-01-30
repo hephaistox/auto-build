@@ -1,10 +1,11 @@
 (ns auto-build.tasks.clj-test
   (:require
-   [auto-build.code.clj-compile :refer [compile-alias]]
-   [auto-build.os.cli-opts      :as build-cli-opts]
-   [auto-build.os.exit-codes    :as build-exit-codes]
-   [auto-build.os.filename      :refer [absolutize]]
-   [auto-build.project.deps     :as build-deps]))
+   [auto-build.os.cli-opts   :as build-cli-opts]
+   [auto-build.os.cmd        :as    build-cmd
+                             :refer [execute-if-success]]
+   [auto-build.os.exit-codes :as build-exit-codes]
+   [auto-build.os.filename   :refer [absolutize]]
+   [auto-build.project.deps  :as build-deps]))
 
 ; ********************************************************************************
 ; *** Task setup
@@ -43,38 +44,44 @@
 
 (defn clj-test*
   "Run tests"
-  [{:keys [subtitle title-valid title-error]
+  [{:keys [uri-str]
     :as printers}
    {:keys [valid-args]
     :as _cli-opts}
    app-dir
    test-runner-alias
    verbose]
-  (let [exit-codes (mapv #(compile-alias printers verbose app-dir test-runner-alias %) valid-args)]
-    (subtitle "clj-test of" valid-args)
-    (if (every? #(= :success (:status %)) exit-codes)
-      (do (title-valid "Tests passed") build-exit-codes/ok)
-      (do (title-error "Tests have failed") build-exit-codes/invalid-state))))
+  (-> (reduce (fn [res alias]
+                (execute-if-success res
+                                    printers
+                                    app-dir
+                                    verbose
+                                    ["clojure" (str "-M:" test-runner-alias ":" alias)]
+                                    (str (uri-str alias) " alias is tested")
+                                    (str (uri-str alias) "alias test has failed")
+                                    (keyword (str "test-" alias))
+                                    nil))
+              {:status :success}
+              valid-args)))
 
 (defn clj-test
   "Run tests. Return an exit code"
-  [{:keys [title exceptionln errorln]
+  [{:keys [title]
     :as printers}
    app-dir
    test-runner-alias
    current-task
    test-definitions]
-  (title "clj-test")
-  (try (if-let [aliases-in-deps-edn (aliases-in-deps-edn printers app-dir)]
-         (let [cli-opts (cli-opts test-definitions aliases-in-deps-edn)
-               verbose (get-in cli-opts [:options :verbose])
-               exit-code (build-cli-opts/enter-args-in-a-list cli-opts
+  (if-let [aliases-in-deps-edn (aliases-in-deps-edn printers app-dir)]
+    (let [cli-opts (cli-opts test-definitions aliases-in-deps-edn)
+          verbose (get-in cli-opts [:options :verbose])]
+      (if-let [exit-code (build-cli-opts/enter-args-in-a-list cli-opts
                                                               current-task
                                                               "TEST-ALIASES"
                                                               test-definitions)]
-           (if exit-code exit-code (clj-test* printers cli-opts app-dir test-runner-alias verbose)))
-         build-exit-codes/invalid-state)
-       (catch Exception e
-         (errorln "Unexpected error:")
-         (exceptionln e)
-         build-exit-codes/unexpected-exception)))
+        exit-code
+        (let [title-msg "clj-test"]
+          (title title-msg)
+          (-> (clj-test* printers cli-opts app-dir test-runner-alias verbose)
+              (build-cmd/status-to-exit-code printers title-msg)))))
+    build-exit-codes/invalid-state))
