@@ -1,5 +1,8 @@
 {:aliases
- {:clj-test-runner {:exec-fn cognitect.test-runner.api/test
+ {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
+          :extra-paths ["build"]
+          :ns-default compile}
+  :clj-test-runner {:exec-fn cognitect.test-runner.api/test
                     :extra-deps {com.cognitect/test-runner
                                  {:git/url "https://github.com/cognitect-labs/test-runner"
                                   :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}}}
@@ -13,8 +16,6 @@
           :extra-deps {codox/codox {:mvn/version "0.10.8"}}}
   :repl {:exec-args {:port 8181}
          :exec-fn auto-build.repl.entry-point/start
-         :extra-deps {cider/cider-nrepl {:mvn/version "0.50.2"}
-                      refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}}
          :extra-paths ["test/src" "test/resources" "env/unit/test" "env/unit/resources"]}
   :test-bb {:extra-paths ["test/src" "test/resources"]
             :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/src"]}
@@ -23,8 +24,9 @@
  :deps {babashka/fs {:mvn/version "0.5.22"}
         babashka/process {:mvn/version "0.5.22"}
         cheshire/cheshire {:mvn/version "5.13.0"}
-        io.github.clojure/tools.build {:mvn/version "0.10.5"}
+        cider/cider-nrepl {:mvn/version "0.50.2"}
         metosin/malli {:mvn/version "0.16.1"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
+        refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :paths ["src"]}
