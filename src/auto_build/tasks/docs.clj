@@ -4,7 +4,7 @@
   (:require
    [auto-build.os.cli-opts   :as build-cli-opts]
    [auto-build.os.cmd        :as    build-cmd
-                             :refer [execute-if-success]]
+                             :refer [analyze-res execute-if-success execute-whateverstatus]]
    [auto-build.os.exit-codes :as build-exit-codes]
    [auto-build.os.file       :as build-file]
    [auto-build.os.filename   :as build-filename]))
@@ -42,18 +42,17 @@
         tmp-dir (build-file/create-temp-dir version)
         version-target-dir (build-filename/create-dir-path app-dir version)]
     (-> {:status :success}
-        (execute-if-success printers
-                            app-dir
-                            verbose
-                            ["git" "status" "-s"]
-                            "Is repo is clean?" "Repo is not clean, stop"
-                            :git-status (fn [status out-stream]
-                                          {:status (if (and (= status :success)
-                                                            (->> out-stream
-                                                                 first
-                                                                 seq))
-                                                     :dirty-state
-                                                     :success)}))
+        (analyze-res printers
+                     app-dir
+                     verbose
+                     ["git" "status" "-s"]
+                     "Is repo is clean?" "Repo is not clean, stop"
+                     :git-status (fn [{:keys [out-stream status]
+                                       :as res}]
+                                   {:status (cond
+                                              (not= status :success) res
+                                              (seq out-stream) :dirty-state
+                                              :else :success)}))
         (execute-if-success
          printers
          app-dir
@@ -61,67 +60,71 @@
          ["clojure" "-X:codox" ":version" pversion :output-path (build-cmd/parameterize tmp-dir)]
          (str "Documentation version " (uri-str version) " is created")
          (str "Error during creation of documentation version " pversion)
-         :version-creation
-         nil)
+         :version-creation)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["git" "switch" doc-branch]
                             (str "Switch to branch " (uri-str doc-branch))
                             "Error during branch switch"
-                            :git-branch-switch
-                            nil)
+                            :git-branch-switch)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["mkdir" "-p" version-target-dir]
                             (str "Creates directory " (uri-str version-target-dir))
                             "Error during directory creation"
-                            :version-dir-creation
-                            nil)
+                            :version-dir-creation)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["cp" "-fr" tmp-dir version-target-dir]
                             (str "Copy version " (uri-str tmp-dir)
                                  " to " (uri-str version-target-dir))
-                            :cp-new-version-files
-                            nil)
+                            "Error during file copy"
+                            :cp-new-version-files)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["rm" "-f" "index.html"]
                             "Remove index.html file"
-                            :git-remove-previous
-                            nil)
+                            "Error during `index.html` removal"
+                            :git-remove-previous)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["ln" "-s" "-F" version "index.html"]
                             (str "Update latest to version " (uri-str version))
-                            :git-latest-updated
-                            nil)
+                            (str "Error when updating latest to version " (uri-str version))
+                            :git-latest-updated)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["git" "add" "."]
-                            "Add to index"
-                            :git-add-to-index
-                            nil)
+                            "Add all modifications to index"
+                            "Error when adding all modifications to index"
+                            :git-add-to-index)
         (execute-if-success printers
                             app-dir
                             verbose
                             ["git" "commit" "-m" (build-cmd/parameterize message)]
-                            "Add to index"
-                            :git-commit
-                            nil)
-        (execute-if-success printers app-dir verbose ["git" "push"] "Push to github" :git-push nil)
+                            "Commit"
+                            "Error during commit"
+                            :git-commit)
         (execute-if-success printers
                             app-dir
                             verbose
-                            ["git" "switch" "-"]
-                            "Back to the previous branch" "Error during branch switching"
-                            :git-branch-switch-back nil))))
+                            ["git" "push"]
+                            "Push to github"
+                            "Error during push"
+                            :git-push)
+        (execute-whateverstatus printers
+                                app-dir
+                                verbose
+                                ["git" "switch" "-"]
+                                "Back to the previous branch"
+                                "Error during branch switching"
+                                :git-branch-switch-back))))
 
 (defn docs
   "Generate docs on branch `doc-branch`"

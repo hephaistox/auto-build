@@ -20,7 +20,11 @@
   clean {:doc "Clean temporary files"
          :requires [[auto-build.tasks.clean :as task-clean]
                     [auto-build.echo :refer [level1-header]]]
-         :task (-> (task-clean/clean level1-header "." [".DS_Store"] [".cpcache"] (current-task))
+         :task (-> (task-clean/clean level1-header
+                                     "."
+                                     [".DS_Store" ".nrepl-port"]
+                                     [".cpcache" ".shadow-cljs"]
+                                     (current-task))
                    exit)}
   clj-test {:doc "Test with clj"
             :requires [[auto-build.tasks.clj-test :as build-clj-test]

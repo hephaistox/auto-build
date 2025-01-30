@@ -59,8 +59,7 @@
                                     ["clojure" (str "-M:" test-runner-alias ":" alias)]
                                     (str (uri-str alias) " alias is tested")
                                     (str (uri-str alias) "alias test has failed")
-                                    (keyword (str "test-" alias))
-                                    nil))
+                                    (keyword (str "test-" alias))))
               {:status :success}
               valid-args)))
 
