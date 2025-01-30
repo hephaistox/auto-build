@@ -13,3 +13,6 @@
 
 docs/wiki/
 docs/codox/
+
+target/
+tmp/

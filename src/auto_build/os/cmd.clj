@@ -323,7 +323,7 @@
    subtitle-msg
    error-msg
    concept-kw]
-  (if (= :success previous-status)
+  (if (and (some? cmd) (= :success previous-status))
     (execute-whateverstatus previous-res
                             printers
                             app-dir

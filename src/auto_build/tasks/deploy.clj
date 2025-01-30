@@ -4,7 +4,6 @@
    [auto-build.os.cmd        :as    build-cmd
                              :refer [analyze-if-success analyze-res execute-if-success]]
    [auto-build.os.exit-codes :as build-exit-codes]
-   [auto-build.project.map   :as build-project-map]
    [clojure.string           :as str]))
 
 ;; ********************************************************************************
@@ -131,11 +130,8 @@
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
     (let [tag (get-in cli-opts [:options :tag])
-          project-map (->> (build-project-map/create-project-map app-dir)
-                           (build-project-map/add-project-config printers))
-          {:keys [app-name]} project-map
           message (get-in cli-opts [:options :message])
-          title-msg (str "Deploy " (uri-str app-name) " version " (uri-str tag))]
+          title-msg (str "Deploy version " (uri-str tag))]
       (title title-msg)
       (if (every? some? [tag message])
         (-> (deploy* printers target-branch-name app-dir)
