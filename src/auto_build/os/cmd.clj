@@ -219,7 +219,6 @@
 (defn printing
   "Print the whole command execution on the terminal. Is blocking until the end."
   [cmd dir on-out on-err delay]
-  (when on-out (on-out "Execute" cmd))
   (-> (create-process cmd dir on-out on-err nil delay #(on-err "Cant' start" % "in dir" dir) 0 0)
       (wait-for nil nil)))
 
@@ -243,43 +242,97 @@
     (printing cmd dir on-out on-err delay)
     (print-on-error cmd dir on-out on-err delay max-out-lines max-err-lines)))
 
+(defn execute-whateverstatus
+  [previous-res
+   {:keys [normalln errorln subtitle]
+    :as _printers}
+   app-dir
+   verbose
+   cmd
+   subtitle-msg
+   error-msg
+   concept-kw]
+  (when (fn? subtitle) (subtitle subtitle-msg))
+  (when verbose (normalln "Execute" cmd))
+  (let [res (if verbose
+              (printing cmd app-dir normalln errorln 10)
+              (print-on-error cmd app-dir normalln errorln 10 100 100))
+        {:keys [status]} res]
+    (merge previous-res
+           {:status status
+            concept-kw res}
+           (when-not (= (:status res) :success) (errorln error-msg) {:status :cmd-failed}))))
+
+(defn analyze-res
+  [previous-res
+   {:keys [normalln errorln subtitle]
+    :as _printers}
+   app-dir
+   verbose
+   cmd
+   subtitle-msg
+   error-msg
+   concept-kw
+   stream-to-res-fn]
+  (when (fn? subtitle) (subtitle subtitle-msg))
+  (when verbose (normalln "Execute" cmd))
+  (let [res (as-string cmd app-dir 100 100)
+        {:keys [status]} res
+        _
+        (when (and (number? verbose) (<= 3 verbose)) (normalln "Command result is") (normalln res))
+        updated-res
+        (if (and (= status :success) (fn? stream-to-res-fn)) (stream-to-res-fn res) res)]
+    (merge
+     previous-res
+     {:status status
+      concept-kw res}
+     (when-not (= (:status updated-res) :success) (errorln error-msg) {:status :cmd-failed}))))
+
+(defn analyze-if-success
+  [{previous-status :status
+    :as previous-res}
+   {:keys [subtitle]
+    :as printers}
+   app-dir
+   verbose
+   cmd
+   subtitle-msg
+   error-msg
+   concept-kw
+   stream-to-res-fn]
+  (if (= :success previous-status)
+    (analyze-res previous-res
+                 printers
+                 app-dir
+                 verbose
+                 cmd
+                 subtitle-msg
+                 error-msg
+                 concept-kw
+                 stream-to-res-fn)
+    (do (subtitle "Skip:" subtitle-msg) (assoc previous-res concept-kw :skipped))))
+
 (defn execute-if-success
-  ([previous-res printers app-dir verbose cmd subtitle-msg concept-kw stream-to-res-fn]
-   (execute-if-success previous-res
-                       printers
-                       app-dir
-                       verbose
-                       cmd
-                       subtitle-msg
-                       (str "Error during " subtitle-msg)
-                       concept-kw
-                       stream-to-res-fn))
-  ([{previous-status :status
-     :as previous-res}
-    {:keys [normalln errorln subtitle]
-     :as _printers}
-    app-dir
-    verbose
-    cmd
-    subtitle-msg
-    error-msg
-    concept-kw
-    stream-to-res-fn]
-   (if (= :success previous-status)
-     (do (when (fn? subtitle) (subtitle subtitle-msg))
-         (when verbose (normalln "Execute" cmd))
-         (let [res (print-on-error cmd app-dir normalln errorln 10 100 100)
-               {:keys [status out-stream]} res
-               updated-res (merge res
-                                  (when (and (= status :success) (fn? stream-to-res-fn))
-                                    (stream-to-res-fn status out-stream)))]
-           (merge previous-res
-                  {:status status
-                   concept-kw res}
-                  (when-not (= (:status updated-res) :success)
-                    (errorln error-msg)
-                    {:status :cmd-failed}))))
-     (do (subtitle "Skip:" subtitle-msg) (assoc previous-res concept-kw :skipped)))))
+  [{previous-status :status
+    :as previous-res}
+   {:keys [subtitle]
+    :as printers}
+   app-dir
+   verbose
+   cmd
+   subtitle-msg
+   error-msg
+   concept-kw]
+  (if (= :success previous-status)
+    (execute-whateverstatus previous-res
+                            printers
+                            app-dir
+                            verbose
+                            cmd
+                            subtitle-msg
+                            error-msg
+                            concept-kw)
+    (do (subtitle "Skip:" subtitle-msg) (assoc previous-res concept-kw :skipped))))
 
 (defn status-to-exit-code
   [{:keys [status]

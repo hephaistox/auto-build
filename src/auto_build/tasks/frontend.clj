@@ -1,7 +1,8 @@
 (ns auto-build.tasks.frontend
   (:require
    [auto-build.os.cli-opts    :as build-cli-opts]
-   [auto-build.os.cmd         :as build-cmd]
+   [auto-build.os.cmd         :as    build-cmd
+                              :refer [execute-if-success]]
    [auto-build.project.shadow :as build-shadow]))
 
 ;; ********************************************************************************
@@ -26,32 +27,71 @@
 (defn uberjar*
   [printers app-dir app-alias target-dir repo-url]
   (let [shadow-cljs (build-shadow/read printers app-dir)
-        shadow-output-dir (get-in shadow-cljs [:edn :builds (keyword app-alias) :output-dir])
-        cmd-if-success
-        (fn [prev-res dir cmd title concept-kw]
-          (build-cmd/execute-if-success prev-res printers dir cmd title concept-kw nil verbose))]
+        shadow-output-dir (get-in shadow-cljs [:edn :builds (keyword app-alias) :output-dir])]
     (-> {:status :success}
-        (cmd-if-success app-dir ["rm" "-fr" target-dir] "Delete previous build" :build-installation)
-        (cmd-if-success app-dir
-                        ["rm" "-fr" shadow-output-dir]
-                        "Delete previous js build"
-                        :cljs-release-clean)
-        (cmd-if-success app-dir ["npm" "install"] "Install npm packages" :npm-installation)
-        (cmd-if-success app-dir
-                        ["npx" "shadow-cljs" "release" app-alias]
-                        "Create a cljs release"
-                        :cljs-release)
-        (cmd-if-success app-dir
-                        ["clojure" "-T:uberjar" ":target-dir" target-dir]
-                        "Build the uberjar"
-                        :uberjar)
-        (cmd-if-success target-dir ["git" "init" "-b" "master"] "Creates a repo" :create-repo)
-        (cmd-if-success target-dir
-                        ["git" "remote" "add" "clever" repo-url]
-                        "Creates a repo"
-                        :add-remote)
-        (cmd-if-success target-dir ["git" "add" "."] "Add jar file to commit" :add-files)
-        (cmd-if-success target-dir ["git" "commit" "-m" "\"auto\""] "Commit" :commit))))
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["rm" "-fr" target-dir]
+                            "Delete previous build"
+                            "Error when deleting previous build"
+                            :build-installation)
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["rm" "-fr" shadow-output-dir]
+                            "Delete previous js build"
+                            "Error when deleting previous js build"
+                            :cljs-release-clean)
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["npm" "install"]
+                            "Install npm packages"
+                            "Error during npm packages installation"
+                            :npm-installation)
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["npx" "shadow-cljs" "release" app-alias]
+                            "Create a cljs release"
+                            "Error during creation of a cljs release"
+                            :cljs-release)
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["clojure" "-T:uberjar" ":target-dir" target-dir]
+                            "Build the uberjar"
+                            "Error during uberjar creation"
+                            :uberjar)
+        (execute-if-success printers
+                            target-dir
+                            verbose
+                            ["git" "init" "-b" "master"]
+                            "Creates a repo"
+                            "Error during repo creation"
+                            :create-repo)
+        (execute-if-success printers
+                            target-dir
+                            verbose
+                            ["git" "remote" "add" "clever" repo-url]
+                            "Add clever remotes"
+                            "Error when adding clever remotes"
+                            :add-remote)
+        (execute-if-success printers
+                            target-dir
+                            verbose
+                            ["git" "add" "."]
+                            "Add jar to index"
+                            "Error when adding jar to index"
+                            :add-jar-to-index)
+        (execute-if-success printers
+                            target-dir
+                            verbose
+                            ["git" "commit" "-m" "\"auto\""]
+                            "Commit"
+                            "Error during commit creation"
+                            :commit))))
 
 ;; ********************************************************************************
 ;; *** Task
@@ -82,19 +122,20 @@
    app-dir
    app-alias]
   (let [title-msg "Local development mode building"
-        cmd-if-success (fn [prev-res cmd title concept-kw]
-                         (build-cmd/execute-if-success prev-res
-                                                       printers
-                                                       app-dir
-                                                       cmd
-                                                       title
-                                                       concept-kw
-                                                       nil
-                                                       verbose))]
+        execute-if-success (fn [prev-res cmd title concept-kw]
+                             (build-cmd/execute-if-success prev-res
+                                                           printers
+                                                           app-dir
+                                                           cmd
+                                                           title
+                                                           concept-kw
+                                                           nil
+                                                           verbose))]
     (title title-msg)
-    (-> {:status :success}
-        (cmd-if-success ["npx" "shadow-cljs" "watch" app-alias] "Watch clojurescript" :watch-cljs)
-        (build-cmd/status-to-exit-code printers title-msg))))
+    (->
+      {:status :success}
+      (execute-if-success ["npx" "shadow-cljs" "watch" app-alias] "Watch clojurescript" :watch-cljs)
+      (build-cmd/status-to-exit-code printers title-msg))))
 
 (defn uberjar
   [{:keys [title]

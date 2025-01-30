@@ -1,4 +1,4 @@
-(ns auto-build.tasks.cljs-browser-test
+(ns auto-build.tasks.cljs-node-test
   (:require
    [auto-build.os.cli-opts    :as build-cli-opts]
    [auto-build.os.cmd         :as    build-cmd
@@ -43,7 +43,7 @@
 ; *** Task code
 ; ********************************************************************************
 
-(defn cljs-browser-test*
+(defn cljs-node-test*
   "Remove file from `filepaths` and directories from `dirs`"
   [{:keys [uri-str]
     :as printers}
@@ -59,20 +59,21 @@
         (execute-if-success printers
                             app-dir
                             true
-                            ["npx" "shadow-cljs" "watch" (str/join ":" aliases)]
-                            (str "Watch cljs test of aliases " text-aliases)
-                            (str "Watch cljs test of aliases " text-aliases " has failed")
-                            :watch-cljs-aliases))))
+                            ["npx" "shadow-cljs" "release" (str/join ":" aliases)]
+                            ;;NOTE Compilation is enough as it `:autorun` parameter is true
+                            (str "Build cljs release for aliases " text-aliases)
+                            (str "Build cljs release for aliases " text-aliases " has failed")
+                            :build-cljs-aliases))))
 
 
-(defn cljs-browser-test
+(defn cljs-node-test
   "Remove file from `filepaths` and directories from `dirs`"
   [{:keys [title]
     :as printers}
    app-dir
    current-task
    test-definitions]
-  (if-let [aliases-in-deps-edn (aliases-in-shadow printers app-dir :browser-test)]
+  (if-let [aliases-in-deps-edn (aliases-in-shadow printers app-dir :node-test)]
     (let [cli-opts (cli-opts test-definitions (keys aliases-in-deps-edn))
           verbose (get-in cli-opts [:options :verbose])]
       (if-let [exit-code (build-cli-opts/enter-args-in-a-list cli-opts
@@ -82,6 +83,6 @@
         exit-code
         (let [title-msg "cljs-test of"]
           (title title-msg)
-          (-> (cljs-browser-test* printers app-dir cli-opts verbose)
+          (-> (cljs-node-test* printers app-dir cli-opts verbose)
               (build-cmd/status-to-exit-code printers title-msg)))))
     build-exit-codes/invalid-state))

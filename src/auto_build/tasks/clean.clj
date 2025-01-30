@@ -41,8 +41,7 @@
                                (str/join ", ")
                                (str "Remove files "))
                           "File deletion has failed"
-                          :remove-files
-                          nil)
+                          :remove-files)
       (execute-if-success printers
                           app-dir
                           verbose
@@ -52,8 +51,7 @@
                                (str/join ", ")
                                (str "Remove dirs "))
                           "Dir deletion has failed"
-                          :remove-dirs
-                          nil)))
+                          :remove-dirs)))
 
 (defn clean
   "Remove file from `filepaths` and directories from `dirs`"
