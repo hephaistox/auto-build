@@ -54,7 +54,7 @@ jobs:
           fail-if-not-clean: true
           request-changes-if-not-clean: false
           push-if-not-clean: false
+      - name: test code in clojure
+        run: bb clj-test test-unit test-bb -v
       - name: print infos just for debugging, and the logs
         run: bb heph-info
-      - name: test auto-build code in clojure
-        run: bb clj-test test-bb test-unit -v
