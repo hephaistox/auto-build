@@ -70,7 +70,8 @@
        app-dir
        verbose
        ["git" "status"]
-       "Is branch pushed?" (str "Branch " (uri-str target-branch-name) " seems to be async")
+       "Is branch pushed?"
+       (str "Branch " (uri-str target-branch-name) " seems to be async with remote branch")
        :git-status (fn [{:keys [status out-stream]}]
                      {:status (if (and (= status :success)
                                        (->> out-stream
@@ -80,38 +81,33 @@
                                             empty?))
                                 :not-pushed
                                 :success)}))
-      (analyze-if-success
-       printers
-       app-dir
-       verbose
-       ["gh" "run" "list"]
-       "List running gh actions" (str "Branch " (uri-str target-branch-name) " seems to be async")
-       :gh-run-list (fn [{:keys [out-stream]}]
-                      {:last-run (let [res (last out-stream)]
-                                   (cond-> {:run-id (->> (str/split res #"\t")
-                                                         (drop 6)
-                                                         first)}
-                                     (re-find #"completed\tsuccess" res) (assoc :status :success)
-                                     (re-find #"completed\tfailure" res) (assoc :status :run-failed)
-                                     (not (re-find #"completed\t" res)) (assoc :status :wip)))}))
+      (analyze-if-success printers
+                          app-dir
+                          verbose
+                          ["gh" "run" "list"]
+                          "List running gh actions" (str "Branch "
+                                                         (uri-str target-branch-name)
+                                                         " is not validated on github runners.")
+                          :gh-run-list
+                          (fn [{:keys [out-stream]}]
+                            (let [res (last out-stream)]
+                              (cond-> {:run-id (->> (str/split res #"\t")
+                                                    (drop 6)
+                                                    first)}
+                                (re-find #"completed\tsuccess" res) (assoc :status :success)
+                                (re-find #"completed\tfailure" res) (assoc :status :run-failed)
+                                (not (re-find #"completed\t" res)) (assoc :status :wip)))))
       (analyze-if-success
        printers
        app-dir
        verbose
        (if force?
-         ["git" "tag" "-f" "-a" tag "-m" (msg-tokenize "zae")]
-         ["git" "tag" "-a" tag "-m" (msg-tokenize "zeaze")])
+         ["git" "tag" "-f" "-a" tag "-m" (msg-tokenize message)]
+         ["git" "tag" "-a" tag "-m" (msg-tokenize message)])
        (str "Create tag " (uri-str tag) " locally")
        (str "Creation of tag " (uri-str tag) " has failed. Use `-f` option to force.")
        :create-tag
-       (fn [{:keys [out-stream]}]
-         {:last-run (let [res (last out-stream)]
-                      (cond-> {:run-id (->> (str/split res #"\t")
-                                            (drop 6)
-                                            first)}
-                        (re-find #"completed\tsuccess" res) (assoc :status :success)
-                        (re-find #"completed\tfailure" res) (assoc :status :run-failed)
-                        (not (re-find #"completed\t" res)) (assoc :status :wip)))}))
+       nil)
       (execute-if-success printers
                           app-dir
                           verbose
@@ -129,9 +125,7 @@
    current-task]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
-    (let [tag (get-in cli-opts [:options :tag])
-          message (get-in cli-opts [:options :message])
-          title-msg (str "Deploy version " (uri-str tag))]
+    (let [title-msg (str "Deploy version " (uri-str tag))]
       (title title-msg)
       (if (every? some? [tag message])
         (-> (deploy* printers target-branch-name app-dir)

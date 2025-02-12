@@ -107,7 +107,7 @@
         (execute-if-success printers
                             app-dir
                             verbose
-                            ["git" "commit" "-m" (build-cmd/parameterize message)]
+                            ["git" "commit" "-m" (build-cmd/parameterize message) "--allow-empty"]
                             "Commit"
                             "Error during commit"
                             :git-commit)
