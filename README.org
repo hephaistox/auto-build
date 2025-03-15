@@ -2,7 +2,7 @@
 #+author: Anthony CAUMOND
 # See full fledge org example here https://github.com/fniessen/refcard-org-mode/blob/master/README.org?plain=1
 
-[[https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml][https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml/badge.svg]] [[https://github.com/hephaistox/auto-build/actions/workflows/deploy_clojar.yml][https://github.com/hephaistox/auto-build/actions/workflows/deploy_clojar.yml/badge.svg]] [[https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment][https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment/badge.svg]]
+[[https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml][https://github.com/hephaistox/auto-build/actions/workflows/commit_validation.yml/badge.svg]]  [[https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment][https://github.com/hephaistox/auto-build/actions/workflows/pages/pages-build-deployment/badge.svg]]
 
 [[https://clojars.org/org.clojars.hephaistox/auto-build][https://img.shields.io/clojars/v/org.clojars.hephaistox/auto-build.svg]]
 
@@ -30,4 +30,4 @@ If every tool, when ordered, or even of its own accord, could do the work that b
 * LICENCE
 See license information in [[LICENSE.md][Attribution-NonCommercial 4.0 International]]
 
-Copyright © 2020-2024 Hephaistox
+Copyright © 2020-2025 Hephaistox
