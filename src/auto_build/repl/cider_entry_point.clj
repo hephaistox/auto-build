@@ -3,7 +3,6 @@
   (:require
    [auto-build.echo          :refer [level1-header]]
    [auto-build.os.exit-codes :as exit-codes]
-   [cider.nrepl.middleware]
    [clojure.string           :as str]
    [nrepl.server]))
 
@@ -16,11 +15,14 @@
     (normalln "Start repl on port:" port)
     (try
       (try (spit ".nrepl-port" port)
-           (nrepl.server/start-server :port port
-                                      :handler (apply nrepl.server/default-handler
-                                                      (conj
-                                                       cider.nrepl.middleware/cider-middleware
-                                                       'refactor-nrepl.middleware/wrap-refactor)))
+           (nrepl.server/start-server
+            :port port
+            :handler (if (find-ns 'cider.nrepl.middleware)
+                       #_{:clj-kondo/ignore [:unresolved-namespace]}
+                       (apply nrepl.server/default-handler
+                              (conj (resolve 'cider.nrepl.middleware/cider-middleware)
+                                    'refactor-nrepl.middleware/wrap-refactor))
+                       nrepl.server/default-handler))
            (let [blocking-promise (promise)] @blocking-promise)
            (catch Exception e
              (if (str/includes? (ex-message e) "Address already in use")
