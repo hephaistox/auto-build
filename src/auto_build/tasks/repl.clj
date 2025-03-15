@@ -1,7 +1,8 @@
 (ns auto-build.tasks.repl
   (:require
    [auto-build.os.cli-opts :as build-cli-opts]
-   [babashka.process       :as p]))
+   [babashka.process       :as p]
+   [clojure.string         :as str]))
 
 ;; ********************************************************************************
 ;; *** Task setup
@@ -19,11 +20,11 @@
 ;; ********************************************************************************
 
 (defn repl*
-  [app-dir repl-alias]
+  [app-dir repl-aliases repl-port]
   (-> (p/shell {:continue true
                 :dir app-dir}
-               "clojure"
-               (str "-X:" repl-alias))
+               "clojure" (str "-X:" (str/join "" repl-aliases))
+               ":port" repl-port)
       :exit))
 
 (defn repl
@@ -31,9 +32,10 @@
     :as _printers}
    app-dir
    current-task
-   repl-alias]
+   repl-aliases
+   repl-port]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
-    (let [title-msg (str "Start clj repl - alias " repl-alias)]
+    (let [title-msg (str "Start clj repl - alias " repl-aliases)]
       (title title-msg)
-      (repl* app-dir repl-alias))))
+      (repl* app-dir repl-aliases repl-port))))

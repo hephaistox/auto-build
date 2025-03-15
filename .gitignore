@@ -1,18 +1,21 @@
+# V1 - For build project
+# ********************************************************************************
+# auto-build
+# ********************************************************************************
+## auto-build
 **/**/.nrepl-port
 **/.DS_Store
 **/.clj-kondo/.cache
 **/.cpcache/
-# Private credentials
+### Private credentials
 **/.clever.json
 **/tmp
+**/target
 
-#intellij
+### Intellij
 .idea/
 **.iml
 **/**.iml
 
 docs/wiki/
 docs/codox/
-
-target/
-tmp/

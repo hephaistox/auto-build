@@ -1,7 +1,13 @@
 {:aliases
- {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
+ {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}
+                org.slf4j/slf4j-nop {:mvn/version "2.0.17"}}
+         :main-opts ["-m" "antq.core"]}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
           :extra-paths ["build"]
           :ns-default compile}
+  :cider-repl {:exec-fn auto-build.repl.cider-entry-point/start
+               :extra-paths ["test/src" "test/resources" "env/unit/test" "env/unit/resources"]
+               :jvm-opts ["-Djdk.attach.allowAttachSelf=true"]}
   :clj-test-runner {:exec-fn cognitect.test-runner.api/test
                     :extra-deps {com.cognitect/test-runner
                                  {:git/url "https://github.com/cognitect-labs/test-runner"
@@ -14,19 +20,14 @@
            :source-uri "https://github.com/hephaistox/auto-build/blob/{version}/{filepath}#L{line}"}
           :exec-fn codox.main/generate-docs
           :extra-deps {codox/codox {:mvn/version "0.10.8"}}}
-  :repl {:exec-args {:port 8181}
-         :exec-fn auto-build.repl.entry-point/start
-         :extra-paths ["test/src" "test/resources" "env/unit/test" "env/unit/resources"]}
   :test-bb {:extra-paths ["test/src" "test/resources"]
             :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/src"]}
   :test-unit {:extra-paths ["env/unit/test/" "env/unit/resources"]
               :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "env/unit/test/"]}}
- :deps {babashka/fs {:mvn/version "0.5.22"}
+ :deps {babashka/fs {:mvn/version "0.5.24"}
         babashka/process {:mvn/version "0.5.22"}
         cheshire/cheshire {:mvn/version "5.13.0"}
-        cider/cider-nrepl {:mvn/version "0.50.2"}
-        metosin/malli {:mvn/version "0.16.1"}
+        metosin/malli {:mvn/version "0.17.0"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
-        refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :paths ["src"]}
