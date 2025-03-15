@@ -11,7 +11,7 @@
 
 `auto-build` library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [[https://github.com/hephaistox/hephaistox/wiki][definitions]]).
 
-[[file:docs/img/automaton_small_duck.png]]
+[[file:docs/img/automaton_duck.png]]
 
 #+BEGIN_QUOTE
 If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b

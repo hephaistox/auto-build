@@ -1,14 +1,10 @@
 {:deps {cheshire/cheshire {:mvn/version "5.13.0"}
-        io.github.clojure/tools.build {:mvn/version "0.10.5"}
-        metosin/malli {:mvn/version "0.16.1"}
+        io.github.clojure/tools.build {:mvn/version "0.10.7"}
+        metosin/malli {:mvn/version "0.17.0"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}}
  :paths ["src"]
  :tasks
- {-base-deps {:doc "Dependencies for a task using bb"}
-  :init (do (def ^:dynamic exit System/exit))
-  :requires [;;NOTE Should be as small as possible to ensure `lconnect`
-             ;;can start whatever the state of the code is.
-             [auto-build.os.exit-codes]]
+ {:requires [[auto-build.os.exit-codes] [auto-build.os.exiting :refer [exit]]]
   bp {:doc "Before push"
       :task (binding [exit (fn [exit-code & _] (when-not (zero? exit-code) exit-code))]
               (-> (or (run 'format)
@@ -40,6 +36,8 @@
                      [auto-build.echo :refer [level1-header]]]
           :task (-> (task-deploy/deploy level1-header "." "main" (current-task))
                     exit)}
+  deps {:doc "Update deps"
+        :task (shell "clj -M:antq")}
   docs {:doc "Docs"
         :requires [[auto-build.tasks.docs :as build-docs] [auto-build.echo :refer [level1-header]]]
         :task (-> (build-docs/docs level1-header "." (current-task) "gh-pages")
@@ -49,20 +47,23 @@
                      [auto-build.echo :refer [level1-header]]]
           :task (-> (task-format/format level1-header "." (current-task))
                     exit)}
+  gha {:doc "For github action tests"
+       :task (shell "bb clj-test test-unit test-bb -v")}
   heph-info {:doc "Hephaistox project info"
              :requires [[auto-build.tasks.heph-info :as heph-info]
                         [auto-build.echo :refer [level1-header]]]
-             :task (-> (heph-info/heph-info level1-header (current-task))
+             :task (-> (heph-info/heph-info level1-header (current-task) ".")
                        exit)}
   lint {:doc "Lint"
         :requires [[auto-build.tasks.lint :as task-lint] [auto-build.echo :refer [level1-header]]]
         :task (-> (task-lint/lint level1-header ["src" "test" "env/unit/test"] "." (current-task))
                   exit)}
-  repl {:doc "Clojure repl"
+  repl {:doc "Clojure repl based on cider"
         :override-builtin true
         :requires [[auto-build.tasks.repl :as build-repl] [auto-build.echo :refer [level1-header]]]
-        :task (-> (build-repl/repl level1-header "." (current-task))
-                  exit)}
+        :task
+        (-> (build-repl/repl level1-header "." (current-task) [:cider-repl :cider-repl-deps] 7001)
+            exit)}
   uberjar {:doc "Uberjar"
            :override-builtin true
            :requires [[auto-build.tasks.uberjar :as build-uberjar]
