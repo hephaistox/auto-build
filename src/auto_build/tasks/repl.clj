@@ -19,20 +19,21 @@
 ;; ********************************************************************************
 
 (defn repl*
-  [app-dir]
+  [app-dir repl-alias]
   (-> (p/shell {:continue true
                 :dir app-dir}
                "clojure"
-               "-X:repl")
+               (str "-X:" repl-alias))
       :exit))
 
 (defn repl
   [{:keys [title]
     :as _printers}
    app-dir
-   current-task]
+   current-task
+   repl-alias]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
-    (let [title-msg "Start clj repl"]
+    (let [title-msg (str "Start clj repl - alias " repl-alias)]
       (title title-msg)
-      (repl* app-dir))))
+      (repl* app-dir repl-alias))))
