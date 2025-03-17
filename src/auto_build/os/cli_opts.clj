@@ -107,7 +107,8 @@
     :as cli-opts}
    arg-list]
   (cond-> cli-opts
-    (contains? (set arguments) "all") (assoc :arguments arg-list)))
+    (contains? (set arguments) "all") (assoc :arguments arg-list)
+    (empty? arguments) (assoc :arguments arg-list)))
 
 (defn parse-argument-list
   [parsed-cli-opts arg-list defined-args]
