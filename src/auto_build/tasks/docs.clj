@@ -36,7 +36,8 @@
   [{:keys [uri-str]
     :as printers}
    app-dir
-   doc-branch]
+   doc-branch
+   doc-alias]
   (let [version tag
         pversion (build-cmd/parameterize version)
         tmp-dir (build-file/create-temp-dir version)
@@ -53,14 +54,18 @@
                                               (not= status :success) res
                                               (seq out-stream) :dirty-state
                                               :else :success)}))
-        (execute-if-success
-         printers
-         app-dir
-         verbose
-         ["clojure" "-X:codox" ":version" pversion :output-path (build-cmd/parameterize tmp-dir)]
-         (str "Documentation version " (uri-str version) " is created")
-         (str "Error during creation of documentation version " pversion)
-         :version-creation)
+        (execute-if-success printers
+                            app-dir
+                            verbose
+                            ["clojure"
+                             (str "-X" doc-alias)
+                             ":version"
+                             pversion
+                             :output-path
+                             (build-cmd/parameterize tmp-dir)]
+                            (str "Documentation version " (uri-str version) " is created")
+                            (str "Error during creation of documentation version " pversion)
+                            :version-creation)
         (execute-if-success printers
                             app-dir
                             verbose
@@ -132,7 +137,8 @@
     :as printers}
    app-dir
    current-task
-   doc-branch]
+   doc-branch
+   doc-alias]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
     (do (when (nil? tag) (errorln "Tag is mandatory"))
@@ -140,7 +146,7 @@
         (if (every? some? [tag message])
           (let [title-msg "Generate docs"]
             (title title-msg)
-            (-> (docs* printers app-dir doc-branch)
+            (-> (docs* printers app-dir doc-branch doc-alias)
                 (build-cmd/status-to-exit-code printers title-msg)))
           (do (build-cli-opts/print-help-message cli-opts current-task)
               build-exit-codes/invalid-argument)))))

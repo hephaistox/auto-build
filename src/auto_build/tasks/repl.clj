@@ -21,11 +21,15 @@
 
 (defn repl*
   [app-dir repl-aliases repl-port]
-  (-> (p/shell {:continue true
+  (let [repl-alias ":repl"
+        cmd ["clojure" (str "-M" (str/join "" repl-aliases) repl-alias) "--port" repl-port]]
+    (println "Execute" cmd)
+    (println "Specify `.clojure/deps.edn`" repl-alias)
+    (-> (apply p/shell
+               {:continue true
                 :dir app-dir}
-               "clojure" (str "-X:" (str/join "" repl-aliases))
-               ":port" repl-port)
-      :exit))
+               cmd)
+        :exit)))
 
 (defn repl
   [{:keys [title]

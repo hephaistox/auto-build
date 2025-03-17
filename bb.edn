@@ -1,7 +1,4 @@
-{:deps {cheshire/cheshire {:mvn/version "5.13.0"}
-        io.github.clojure/tools.build {:mvn/version "0.10.7"}
-        metosin/malli {:mvn/version "0.17.0"}
-        org.clojure/tools.cli {:mvn/version "1.1.230"}}
+{:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
  :paths ["src"]
  :tasks
  {:requires [[auto-build.os.exit-codes] [auto-build.os.exiting :refer [exit]]]
@@ -27,7 +24,7 @@
                        [auto-build.echo :refer [level1-header]]]
             :task (-> (build-clj-test/clj-test level1-header
                                                "."
-                                               "clj-test-runner"
+                                               "clj-test-runner:for-clj-repl"
                                                (current-task)
                                                ["test-bb" "test-unit"])
                       exit)}
@@ -40,8 +37,9 @@
         :task (shell "clj -M:antq")}
   docs {:doc "Docs"
         :requires [[auto-build.tasks.docs :as build-docs] [auto-build.echo :refer [level1-header]]]
-        :task (-> (build-docs/docs level1-header "." (current-task) "gh-pages")
-                  exit)}
+        :task (->
+                (build-docs/docs level1-header "." (current-task) "gh-pages" ":codox:for-clj-repl")
+                exit)}
   format {:doc "Format"
           :requires [[auto-build.tasks.formatting :as task-format]
                      [auto-build.echo :refer [level1-header]]]
@@ -61,9 +59,12 @@
   repl {:doc "Clojure repl based on cider"
         :override-builtin true
         :requires [[auto-build.tasks.repl :as build-repl] [auto-build.echo :refer [level1-header]]]
-        :task
-        (-> (build-repl/repl level1-header "." (current-task) [:cider-repl :cider-repl-deps] 7001)
-            exit)}
+        :task (-> (build-repl/repl level1-header
+                                   "."
+                                   (current-task)
+                                   [:for-clj-repl :test-unit :test-bb :build]
+                                   7001)
+                  exit)}
   uberjar {:doc "Uberjar"
            :override-builtin true
            :requires [[auto-build.tasks.uberjar :as build-uberjar]
