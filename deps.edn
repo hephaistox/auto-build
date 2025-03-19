@@ -2,9 +2,6 @@
  {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}
                 org.slf4j/slf4j-nop {:mvn/version "2.0.17"}}
          :main-opts ["-m" "antq.core"]}
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
-          :extra-paths ["build"]
-          :ns-default compile}
   :clj-test-runner {:exec-fn cognitect.test-runner.api/test
                     :extra-deps {com.cognitect/test-runner
                                  {:git/url "https://github.com/cognitect-labs/test-runner"

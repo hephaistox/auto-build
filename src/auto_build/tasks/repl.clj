@@ -24,7 +24,7 @@
   (let [repl-alias ":repl"
         cmd ["clojure" (str "-M" (str/join "" repl-aliases) repl-alias) "--port" repl-port]]
     (println "Execute" cmd)
-    (println "Specify `.clojure/deps.edn`" repl-alias)
+    (println "Specify `.clojure/deps.edn`" repl-alias "to create a repl adapter to your IDE")
     (-> (apply p/shell
                {:continue true
                 :dir app-dir}
