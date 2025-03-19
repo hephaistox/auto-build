@@ -1,7 +1,13 @@
 {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
  :paths ["src"]
  :tasks
- {:requires [[auto-build.os.exit-codes] [auto-build.os.exiting :refer [exit]]]
+ {-uberjar {:doc "Uberjar"
+            :override-builtin true
+            :requires [[auto-build.tasks.uberjar :as build-uberjar]
+                       [auto-build.echo :refer [level1-header]]]
+            :task (-> (build-uberjar/uberjar level1-header "." "target")
+                      exit)}
+  :requires [[auto-build.os.exit-codes] [auto-build.os.exiting :refer [exit]]]
   bp {:doc "Before push"
       :task (binding [exit (fn [exit-code & _] (when-not (zero? exit-code) exit-code))]
               (-> (or (run 'format)
@@ -64,10 +70,4 @@
                                    (current-task)
                                    [:for-clj-repl :test-unit :test-bb :build]
                                    7001)
-                  exit)}
-  uberjar {:doc "Uberjar"
-           :override-builtin true
-           :requires [[auto-build.tasks.uberjar :as build-uberjar]
-                      [auto-build.echo :refer [level1-header]]]
-           :task (-> (build-uberjar/uberjar level1-header "." "target")
-                     exit)}}}
+                  exit)}}}
