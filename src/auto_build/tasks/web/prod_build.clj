@@ -48,7 +48,7 @@
           printers
           app-dir
           verbose
-          ["clojure" (str "-T" uberjar-aliases) :production-dir (str "'\"" target-dir "\"'")]
+          ["clojure" (apply str "-T" uberjar-aliases) :production-dir (str "'\"" target-dir "\"'")]
           "Build uberjar"
           "Error during uberjar creation"
           :create-uberjar)
@@ -92,13 +92,14 @@
    current-task
    uberjar-aliases
    fe-app-name
-   env-varname]
+   env-varname
+   target-dir]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
     exit-code
     (if-let [repo-url (System/getenv env-varname)]
       (let [title-msg "Generate uberjar"]
         (title title-msg)
-        (-> (build* printers app-dir uberjar-aliases fe-app-name repo-url)
+        (-> (build* printers app-dir uberjar-aliases fe-app-name repo-url target-dir)
             (build-cmd/status-to-exit-code printers title-msg)))
       (errorln "For security reasons, the repo url should be saved as a system environment"))))
 
@@ -125,7 +126,7 @@
                                 target-dir
                                 verbose
                                 ["git" "push" "--force"]
-                                "Push to production"
+                                (str "Push to `" repo-url "`")
                                 "Error during push"
                                 :push)
             (build-cmd/status-to-exit-code printers title-msg)))
