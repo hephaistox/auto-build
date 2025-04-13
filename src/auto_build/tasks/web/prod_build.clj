@@ -25,18 +25,25 @@
     :as printers}
    app-dir
    uberjar-aliases
-   fe-app-name
+   fe-app-names
    repo-url
    target-dir]
   (cond-> {:status :success}
-    fe-app-name (execute-whateverstatus
-                 printers
-                 app-dir
-                 verbose
-                 ["npx" "shadow-cljs" "release" fe-app-name]
-                 (str "Build " (uri-str fe-app-name) " frontend in production mode")
-                 (str "Frontend building of " (uri-str fe-app-name) " has failed")
-                 :git-status)
+    true (execute-if-success printers
+                             app-dir
+                             verbose
+                             ["rm" "-fr" "resources/public/js/compiled" "target"]
+                             "Clean previous frontend build"
+                             "Error during target directory cleaning"
+                             :clean-dir)
+    fe-app-names (execute-whateverstatus
+                  printers
+                  app-dir
+                  verbose
+                  (concat ["npx" "shadow-cljs" "release"] fe-app-names)
+                  (str "Build " (uri-str fe-app-names) " frontend in production mode")
+                  (str "Frontend building of " (uri-str fe-app-names) " has failed")
+                  :git-status)
     true (execute-if-success printers
                              app-dir
                              verbose
@@ -85,13 +92,13 @@
   "Build the project in production mode, and deploy remotely
 
   `uberjar-aliases` is a string of keywords that should be assembled to build the jar (called with -T)
-  `fe-app-name` if the name as found in `shadow-cljs.edn`"
+  `fe-app-names` if the name as found in `shadow-cljs.edn`"
   [{:keys [title errorln]
     :as printers}
    app-dir
    current-task
    uberjar-aliases
-   fe-app-name
+   fe-app-names
    env-varname
    target-dir]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
@@ -99,7 +106,7 @@
     (if-let [repo-url (System/getenv env-varname)]
       (let [title-msg "Generate uberjar"]
         (title title-msg)
-        (-> (build* printers app-dir uberjar-aliases fe-app-name repo-url target-dir)
+        (-> (build* printers app-dir uberjar-aliases fe-app-names repo-url target-dir)
             (build-cmd/status-to-exit-code printers title-msg)))
       (errorln "For security reasons, the repo url should be saved as a system environment"))))
 
@@ -107,13 +114,13 @@
   "Build the project in production mode, and deploy remotely
 
   `uberjar-aliases` is a string of keywords that should be assembled to build the jar (called with -T)
-  `fe-app-name` if the name as found in `shadow-cljs.edn`"
+  `fe-app-names` if the name as found in `shadow-cljs.edn`"
   [{:keys [title errorln]
     :as printers}
    app-dir
    current-task
    uberjar-aliases
-   fe-app-name
+   fe-app-names
    env-varname
    target-dir]
   (if-let [exit-code (build-cli-opts/enter cli-opts current-task)]
@@ -121,7 +128,7 @@
     (if-let [repo-url (System/getenv env-varname)]
       (let [title-msg "Generate and push uberjar"]
         (title title-msg)
-        (-> (build* printers app-dir uberjar-aliases fe-app-name repo-url target-dir)
+        (-> (build* printers app-dir uberjar-aliases fe-app-names repo-url target-dir)
             (execute-if-success printers
                                 target-dir
                                 verbose
