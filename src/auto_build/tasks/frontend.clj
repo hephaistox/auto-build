@@ -109,11 +109,11 @@
     (-> (uberjar* printers app-dir app-alias target-dir repo-url)
         (build-cmd/execute-if-success printers
                                       target-dir
+                                      verbose
                                       ["git" "push" "--force" "-u" "clever" "master"]
                                       "Push to clever"
-                                      :push-to-clever
-                                      nil
-                                      verbose)
+                                      "Pushing to clever has failed"
+                                      :push-to-clever)
         (build-cmd/status-to-exit-code printers title-msg))))
 
 (defn repl-cljs
