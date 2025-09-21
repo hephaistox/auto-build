@@ -24,6 +24,6 @@
                                    ((if (fn? uri-str) uri-str identity))
                                    build-filename/absolutize)
                                "is not a valid edn.")
-                      (when exception-msg (exception-msg e)))
+                      (when exception-msg (exception-msg (.getMessage e))))
                     {:exception e
                      :status :edn-failed}))))))

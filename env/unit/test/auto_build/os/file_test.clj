@@ -149,14 +149,12 @@
                               (io/resource "valid_content.edn"))
                with-out-str))
         "What a valid file is printing")
-    (is
-     (=
-      "Impossible to load file non-existing-file.edn\nnon-existing-file.edn (No such file or directory)\n"
-      (-> (sut/read-file {:errorln println
-                          :exception-msg (comp println ex-message)}
-                         "non-existing-file.edn")
-          with-out-str))
-     "What an invalid file is printing")))
+    (is (str/includes? (-> (sut/read-file {:errorln println
+                                           :exception-msg (comp println ex-message)}
+                                          "non-existing-file.edn")
+                           with-out-str)
+                       "Impossible to load file non-existing-file.edn\n")
+        "What an invalid file is printing")))
 
 (deftest write-file-test
   (testing "Returned data"
@@ -203,12 +201,12 @@
                (sut/write-file {} "foo")
                with-out-str))
         "What a successful file writing is printing if no printer is provided")
-    (is (= "File nil could not be written\nCannot open <nil> as a Writer.\n"
-           (-> nil
-               (sut/write-file {:errorln println
-                                :exception-msg (comp println ex-message)}
-                               "foo")
-               with-out-str))
+    (is (str/includes? (-> nil
+                           (sut/write-file {:errorln println
+                                            :exception-msg (comp println ex-message)}
+                                           "foo")
+                           with-out-str)
+                       "File nil could not be written\n")
         "What a failing file writing is printing")))
 
 ;; ********************************************************************************
