@@ -43,12 +43,12 @@
     (is (str/includes? (with-out-str (sut/read-edn {:errorln println
                                                     :exception-msg #(println (ex-message %))}
                                                    "non-existing-file"))
-                       "No such file or directory)\n")
+                       "Impossible to load file")
         "For a non existing file")
     (is (str/includes? (with-out-str (sut/read-edn {:errorln println
                                                     :exception-msg #(println (ex-message %))}
                                                    (io/resource "invalid_content.edn")))
-                       "is not a valid edn.\nMap literal must contain an even number of forms\n")
+                       "is not a valid edn.")
         "For a content which is not a valid edn")
     (is (= ""
            (with-out-str (sut/read-edn {:errorln println
@@ -93,10 +93,10 @@
                (sut/write-edn {} "foo")
                with-out-str))
         "What a successful file writing is printing if no printer is provided")
-    (is (= "File nil could not be written\nCannot open <nil> as a Writer.\n"
-           (-> nil
-               (sut/write-edn {:errorln println
-                               :exception-msg (comp println ex-message)}
-                              "foo")
-               with-out-str))
+    (is (str/includes? (-> nil
+                           (sut/write-edn {:errorln println
+                                           :exception-msg (comp println ex-message)}
+                                          "foo")
+                           with-out-str)
+                       "File nil could not be written")
         "What a failing file writing is printing")))

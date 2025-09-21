@@ -170,7 +170,7 @@ Returns:
                   (when (fn? errorln)
                     (errorln "Impossible to load file"
                              ((if (fn? uri-str) uri-str identity) filepath)))
-                  (when exception-msg (exception-msg e))
+                  (when exception-msg (exception-msg (.getMessage e)))
                   {:exception e
                    :status :file-loading-fail})))))
 
@@ -198,7 +198,7 @@ Returns:
         (catch Exception e
           (when (fn? errorln)
             (errorln "File" ((if (fn? uri-str) uri-str identity) filepath) "could not be written"))
-          (when (fn? exception-msg) (exception-msg e))
+          (when (fn? exception-msg) (exception-msg (.getMessage e)))
           {:exception e
            :status :file-writing-fail}))))
 

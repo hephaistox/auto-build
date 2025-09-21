@@ -2,10 +2,12 @@
  :paths ["src"]
  :tasks
  {:requires [[auto-build.os.exit-codes] [auto-build.os.exiting :refer [exit]]]
-  bp {:doc "Before push"
+  bp {:doc "To fail fast before git pushing a version"
+      :requires [[auto-build.echo :refer [level1-header]] [auto-build.tasks.deps :as td]]
       :task (binding [exit (fn [exit-code & _] (when-not (zero? exit-code) exit-code))]
               (-> (or (run 'format)
                       (run 'lint)
+                      (td/task level1-header ".")
                       (binding [*command-line-args* (conj *command-line-args* "all")]
                         (run 'clj-test))
                       auto-build.os.exit-codes/ok)
@@ -19,7 +21,7 @@
                                      [".cpcache" ".shadow-cljs"]
                                      (current-task))
                    exit)}
-  clj-test {:doc "Test with clj"
+  clj-test {:doc "Run clojure test"
             :requires [[auto-build.tasks.clj-test :as build-clj-test]
                        [auto-build.echo :refer [level1-header]]]
             :task (-> (build-clj-test/clj-test level1-header
@@ -28,31 +30,31 @@
                                                (current-task)
                                                ["test-bb" "test-unit"])
                       exit)}
-  deploy {:doc "Deploy"
+  deploy {:doc "Add tags to the main branch to create a new version"
           :requires [[auto-build.tasks.deploy :as task-deploy]
                      [auto-build.echo :refer [level1-header]]]
           :task (-> (task-deploy/deploy level1-header "." "main" (current-task))
                     exit)}
-  deps {:doc "Update deps"
+  deps {:doc "Update dependencies (clojure ones)"
         :task (shell "clj -M:antq")}
   docs {:doc "Docs"
         :requires [[auto-build.tasks.docs :as build-docs] [auto-build.echo :refer [level1-header]]]
         :task (->
                 (build-docs/docs level1-header "." (current-task) "gh-pages" ":codox:for-clj-repl")
                 exit)}
-  format {:doc "Format"
+  format {:doc "Format source code"
           :requires [[auto-build.tasks.formatting :as task-format]
                      [auto-build.echo :refer [level1-header]]]
           :task (-> (task-format/format level1-header "." (current-task))
                     exit)}
-  gha {:doc "For github action tests"
+  gha {:doc "To be run by github action"
        :task (shell "bb clj-test test-unit test-bb -v")}
   heph-info {:doc "Hephaistox project info"
              :requires [[auto-build.tasks.heph-info :as heph-info]
                         [auto-build.echo :refer [level1-header]]]
              :task (-> (heph-info/heph-info level1-header (current-task) ".")
                        exit)}
-  lint {:doc "Lint"
+  lint {:doc "Lint source code"
         :requires [[auto-build.tasks.lint :as task-lint] [auto-build.echo :refer [level1-header]]]
         :task (-> (task-lint/lint level1-header ["src" "test" "env/unit/test"] "." (current-task))
                   exit)}
