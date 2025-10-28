@@ -54,8 +54,8 @@
                                project-dir))]
           (subtitle "Copy from alias" alias "in dir" (uri-str app-dir))
           (doseq [file files]
-            (let [src-filename (str app-dir "/" file)
-                  dst-dir (str (fs/parent file))
+            (let [src-filename (str app-dir "/" (if (string? file) file (first file)))
+                  dst-dir (if (string? file) (str (fs/parent file)) (str (fs/parent (second file))))
                   dst-dir (if (= "" dst-dir) "." dst-dir)]
               (if (= :success
                      (-> (muted ["cp" "-fr" src-filename dst-dir] ".")
