@@ -25,73 +25,74 @@
 ;; ********************************************************************************
 
 (defn uberjar*
-  [printers app-dir app-alias target-dir repo-url]
-  (let [shadow-cljs (build-shadow/read printers app-dir)
-        shadow-output-dir (get-in shadow-cljs [:edn :builds (keyword app-alias) :output-dir])]
-    (cond-> {:status :success}
-      true (execute-if-success printers
-                               app-dir
-                               verbose
-                               ["rm" "-fr" target-dir]
-                               "Delete previous build"
-                               "Error when deleting previous build"
-                               :build-installation)
-      true (execute-if-success printers
-                               app-dir
-                               verbose
-                               ["rm" "-fr" shadow-output-dir]
-                               "Delete previous js build"
-                               "Error when deleting previous js build"
-                               :cljs-release-clean)
-      true (execute-if-success printers
-                               app-dir
-                               verbose
-                               ["npm" "install"]
-                               "Install npm packages"
-                               "Error during npm packages installation"
-                               :npm-installation)
-      app-alias (execute-if-success printers
-                                    app-dir
+  ([printers app-dir app-alias target-dir] (uberjar* printers app-dir app-alias target-dir nil))
+  ([printers app-dir app-alias target-dir repo-url]
+   (let [shadow-cljs (build-shadow/read printers app-dir)
+         shadow-output-dir (get-in shadow-cljs [:edn :builds (keyword app-alias) :output-dir])]
+     (cond-> {:status :success}
+       true (execute-if-success printers
+                                app-dir
+                                verbose
+                                ["rm" "-fr" target-dir]
+                                "Delete previous build"
+                                "Error when deleting previous build"
+                                :build-installation)
+       true (execute-if-success printers
+                                app-dir
+                                verbose
+                                ["rm" "-fr" shadow-output-dir]
+                                "Delete previous js build"
+                                "Error when deleting previous js build"
+                                :cljs-release-clean)
+       true (execute-if-success printers
+                                app-dir
+                                verbose
+                                ["npm" "install"]
+                                "Install npm packages"
+                                "Error during npm packages installation"
+                                :npm-installation)
+       app-alias (execute-if-success printers
+                                     app-dir
+                                     verbose
+                                     ["npx" "shadow-cljs" "release" app-alias]
+                                     "Create a cljs release"
+                                     "Error during creation of a cljs release"
+                                     :cljs-release)
+       true (execute-if-success printers
+                                app-dir
+                                verbose
+                                ["clojure" "-T:uberjar" ":target-dir" target-dir]
+                                "Build the uberjar"
+                                "Error during uberjar creation"
+                                :uberjar)
+       repo-url (execute-if-success printers
+                                    target-dir
                                     verbose
-                                    ["npx" "shadow-cljs" "release" app-alias]
-                                    "Create a cljs release"
-                                    "Error during creation of a cljs release"
-                                    :cljs-release)
-      true (execute-if-success printers
-                               app-dir
-                               verbose
-                               ["clojure" "-T:uberjar" ":target-dir" target-dir]
-                               "Build the uberjar"
-                               "Error during uberjar creation"
-                               :uberjar)
-      true (execute-if-success printers
-                               target-dir
-                               verbose
-                               ["git" "init" "-b" "master"]
-                               "Creates a repo"
-                               "Error during repo creation"
-                               :create-repo)
-      true (execute-if-success printers
-                               target-dir
-                               verbose
-                               ["git" "remote" "add" "clever" repo-url]
-                               "Add clever remotes"
-                               "Error when adding clever remotes"
-                               :add-remote)
-      true (execute-if-success printers
-                               target-dir
-                               verbose
-                               ["git" "add" "."]
-                               "Add jar to index"
-                               "Error when adding jar to index"
-                               :add-jar-to-index)
-      true (execute-if-success printers
-                               target-dir
-                               verbose
-                               ["git" "commit" "-m" "\"auto\""]
-                               "Commit"
-                               "Error during commit creation"
-                               :commit))))
+                                    ["git" "init" "-b" "master"]
+                                    "Creates a repo"
+                                    "Error during repo creation"
+                                    :create-repo)
+       repo-url (execute-if-success printers
+                                    target-dir
+                                    verbose
+                                    ["git" "remote" "add" "clever" repo-url]
+                                    "Add clever remotes"
+                                    "Error when adding clever remotes"
+                                    :add-remote)
+       repo-url (execute-if-success printers
+                                    target-dir
+                                    verbose
+                                    ["git" "add" "."]
+                                    "Add jar to index"
+                                    "Error when adding jar to index"
+                                    :add-jar-to-index)
+       repo-url (execute-if-success printers
+                                    target-dir
+                                    verbose
+                                    ["git" "commit" "-m" "\"auto\""]
+                                    "Commit"
+                                    "Error during commit creation"
+                                    :commit)))))
 
 ;; ********************************************************************************
 ;; *** Task
@@ -138,13 +139,13 @@
       (build-cmd/status-to-exit-code printers title-msg))))
 
 (defn uberjar
+  "Creates an uberjar in the `target-dir`, leave this jar locally"
   [{:keys [title]
     :as printers}
    app-dir
    target-dir
-   app-alias
-   repo-url]
+   app-alias]
   (let [title-msg "Production mode building"]
     (title title-msg)
-    (-> (uberjar* printers app-dir app-alias target-dir repo-url)
+    (-> (uberjar* printers app-dir app-alias target-dir)
         (build-cmd/status-to-exit-code printers title-msg))))
