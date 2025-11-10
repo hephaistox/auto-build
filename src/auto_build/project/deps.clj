@@ -3,7 +3,12 @@
   (:refer-clojure :exclude [read])
   (:require
    [auto-build.os.edn-utils :as build-edn-utils]
-   [auto-build.os.filename  :as build-filename]))
+   [auto-build.os.filename  :as build-filename]
+   [babashka.fs             :as fs]))
+
+;; ********************************************************************************
+;; Deps file manipulation
+;; ********************************************************************************
 
 (defn deps-edn-filename
   "A `deps.edn` fullname based on the `app-dir` - the directory containing the application"
@@ -52,6 +57,10 @@
   ;
 )
 
+;; ********************************************************************************
+;; Manipulate dependencies
+;; ********************************************************************************
+
 (defn extract-paths-to-deps
   "List of dependencies found in the `deps` map, is a list of pair :
   * The path to the deps
@@ -62,53 +71,43 @@
        (concat {[:deps] (:deps deps)})
        vec))
 
+(defn is-hephaistox-project?
+  [project-symbol]
+  (re-find (re-pattern "com.github.hephaistox") (str project-symbol)))
+
 (defn flatten-deps
   "Returns a map for each dependency. Its paths, dep-alias, dep-desc."
-  [path-to-deps]
+  [path-to-deps local-app-dir]
   (->> path-to-deps
        (mapcat (fn [[path dep-map]]
-                 (for [[dep-alias dep-desc] dep-map]
-                   {:path path
-                    :dep-alias dep-alias
-                    :dep-desc dep-desc})))
+                 (keep (fn [[dep-alias dep]]
+                         (when (is-hephaistox-project? dep-alias)
+                           (let [{:hephaistox/keys [dir root]} dep]
+                             {:is-local? (some? (:local/root dep))
+                              :dir (-> (str (format "%s/%s" local-app-dir dir)
+                                            (when root (str "/" root)))
+                                       fs/normalize
+                                       str)
+                              :dep dep
+                              :path (conj path dep-alias)
+                              :dep-alias dep-alias})))
+                       dep-map)))
        vec))
 
 (comment
   (-> (read {:errorln println
              :uri-str #(format "`%s`" %)
              :exception-msg #(println "Error: " %)}
-            "landing")
+            "../auto_web/auto_web_cljc")
       :edn
       extract-paths-to-deps
-      flatten-deps)
+      (flatten-deps "../auto_web/auto_web_cljc"))
   ;;
 )
 
-(defn dependant-projects
-  "Map of project symbol associated to their maven reference (`:git/sha`, `:mvn/version` or `:local/root`).
-
-  Gather all dependencies from the main project and all its aliases."
-  [printers app-dir]
-  (let [deps (:edn (read printers app-dir))
-        aliases (:aliases deps)]
-    (apply concat
-           (->> (:deps deps)
-                (mapv #(update % 1 assoc :deps-path ["deps.edn" :deps])))
-           (map #(let [v (second %)]
-                   (->> (:extra-deps v)
-                        (map (fn [x]
-                               (update x
-                                       1 assoc
-                                       :deps-path ["deps.edn" :aliases :extra-deps (first %)])))))
-                aliases))))
-
-(comment
-  (dependant-projects {:errorln println
-                       :uri-str #(format "`%s`" %)
-                       :exception-msg #(println "Error: " %)}
-                      "landing")
-  ;;
-)
+;; ********************************************************************************
+;; Update dependnecies
+;; ********************************************************************************
 
 (defn update-deps-edn
   "Assign `value` at path `path` for the app in `app-dir`"

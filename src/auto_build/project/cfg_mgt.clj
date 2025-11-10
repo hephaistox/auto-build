@@ -31,6 +31,27 @@
                        :out-stream
                        first)})))
 
+(defn git-subdir-data
+  "Returns a map of `git` informations from the repo in `dir`:
+  - `:git-statuts`
+  - `:actual-branch`
+  - `actual-sha`"
+  [dir]
+  (let [pstatus (-> ["git" "status" "-s"]
+                    (as-string dir))
+        status (:out-stream pstatus)]
+    (when (and (fs/exists? dir) (fs/directory? dir))
+      {:git-status status
+       :app-dir dir
+       :actual-branch (-> ["git" "rev-parse" "--abbrev-ref" "HEAD"]
+                          (as-string dir)
+                          :out-stream
+                          first)
+       :actual-sha (-> ["git" "rev-parse" "HEAD"]
+                       (as-string dir)
+                       :out-stream
+                       first)})))
+
 (comment
   (git-data "auto_build")
   (-> ["git" "status" "-s"]
