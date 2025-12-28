@@ -132,7 +132,13 @@
                                 :git-branch-switch-back))))
 
 (defn docs
-  "Generate docs on branch `doc-branch`"
+  "Generate docs on branch `doc-branch`.
+
+  - `printers` is a map with `title` and `errorln`
+  - `app-dir` where the application root
+  - `current-task`
+  - `doc-branch` branch used to store documentation
+  - `doc-alias` alias in `deps.edn` for documentation"
   [{:keys [title errorln]
     :as printers}
    app-dir
